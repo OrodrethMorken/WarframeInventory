@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/refresh_button"
+        android:icon="@drawable/ic_refresh_button"
+        android:title="@string/update"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item android:id="@+id/update_all"
+                android:title="@string/update_all"/>
+            <item android:id="@+id/update_plat"
+                android:title="@string/update_platinum_prices"/>
+        </menu>
+
+    </item>
+    <item android:id="@+id/save_button"
+        android:icon="@drawable/ic_save"
+        android:title="@string/save"
+        app:showAsAction="ifRoom"/>
+    <item android:id="@+id/search_bar"
+        android:title="@string/search"
+        app:showAsAction="never"/>
+    <item android:id="@+id/inventory_button"
+        android:title="@string/inventory"
+        app:showAsAction="never"/>
+    <item android:id="@+id/source"
+        android:title="Select Source"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nexus"
+                    android:title="Nexus Hub"
+                    android:checked="true"/>
+                <item
+                    android:id="@+id/market"
+                    android:title="Warframe.Market" />
+            </group>
+        </menu>
+    </item>
+    <item android:id="@+id/sorting"
+        android:title="@string/sort_duc_plat"
+        app:showAsAction="never"/>item <item android:id="@+id/quit_button"
+        android:icon="@drawable/ic_quit"
+        android:title="@string/close"
+        app:showAsAction="never"/>
+
+</menu>

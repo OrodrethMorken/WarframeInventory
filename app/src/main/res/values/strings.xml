@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Warframe Inventory</string>
+    <string name="image_item">image of the item</string>
+    <string name="item_name">Item Name</string>
+    <string name="platinum">Platinum:\u0020</string>
+    <string name="ducats">Ducats:\u0020</string>
+    <string name="title_activity_test">testActivity</string>
+    <string name="update_price">Update Platinum Prices</string>
+    <string name="storage_label">Owned:\u0020</string>
+    <string name="search">Search</string>
+    <string name="inventory">Inventory</string>
+    <string name="save">Save</string>
+    <string name="close">Close</string>
+    <string name="update_platinum_prices">Update Platinum Prices</string>
+    <string name="update_all">Update All</string>
+    <string name="update">Update</string>
+    <string name="sort_duc_plat">Sort Duc/Plat</string>
+    <string name="sort_az">Sort AZ</string>
+    <string name="catalog">Catalog</string>
+    <string name="duc_plat">Duc/Plat:</string>
+</resources>
