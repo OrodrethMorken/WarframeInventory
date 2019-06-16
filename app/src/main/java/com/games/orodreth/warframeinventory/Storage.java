@@ -1,6 +1,7 @@
 package com.games.orodreth.warframeinventory;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,6 +19,7 @@ public class Storage implements Serializable {
     private ArrayList<Inventory> mInventory;
     private File storage;
     private Context mContext;
+    private static final String TAG = "Storage";
 
     public Storage(Context context){
         mContext = context;
@@ -27,12 +29,12 @@ public class Storage implements Serializable {
 
     public ArrayList<Inventory> getInventory(){
         copyFile();
-        System.out.println("XXX Number of items inside: "+ mInventory.size());
+        Log.d(TAG, "Number of items inside: "+ mInventory.size());
         return mInventory;
     }
 
     private void copyFile(){ //copy the arraylist from the file to mInventory
-        System.out.println("XXX Reading File");
+        Log.d(TAG, "Reading File");
         try {
             FileInputStream fis = new FileInputStream(storage);
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -40,32 +42,32 @@ public class Storage implements Serializable {
             ois.close();
             fis.close();
         } catch (FileNotFoundException e) {
-            System.out.println("XXX Error Reading File 1");
+            Log.d(TAG, "Error Reading File 1");
             e.printStackTrace();
         } catch (IOException e) {
-            System.out.println("XXX Error Reading File 2");
+            Log.d(TAG, "Error Reading File 2");
             e.printStackTrace();
             storage.delete();
         } catch (ClassNotFoundException e) {
-            System.out.println("XXX Error Reading File 3");
+            Log.d(TAG, "Error Reading File 3");
             e.printStackTrace();
         }
     }
 
     private void saveFile(){ //write arraylist to the file
-        System.out.println("XXX Writing File");
+        Log.d(TAG, "Writing File");
         try {
             FileOutputStream fos = new FileOutputStream(storage, false);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            System.out.println("XXX Writing File object size: "+ mInventory.size());
+            Log.d(TAG, "Writing File object size: "+ mInventory.size());
             oos.writeObject(mInventory);
             oos.close();
             fos.close();
         } catch (FileNotFoundException e) {
-            System.out.println("XXX Error Writing File 1");
+            Log.d(TAG, "Error Writing File 1");
             e.printStackTrace();
         } catch (IOException e) {
-            System.out.println("XXX Error Writing File 2");
+            Log.d(TAG, "Error Writing File 2");
             e.printStackTrace();
             storage.delete();
         }

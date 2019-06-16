@@ -3,6 +3,7 @@ package com.games.orodreth.warframeinventory;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,6 +23,7 @@ public class Catalog implements Serializable {
     private ArrayList<Items> mItems;
     private File catalog;
     private Context mContext;
+    private static final String TAG = "Catalog";
 
     public Catalog(Context context){
         mContext = context;
@@ -31,12 +33,12 @@ public class Catalog implements Serializable {
 
     public ArrayList<Items> getItems(){
         copyFile();
-        System.out.println("XXX Number of items inside: "+mItems.size());
+        Log.d(TAG, "Number of items inside: "+mItems.size());
         return mItems;
     }
 
     private void copyFile(){ //copy the arraylist from the file to mItems
-        System.out.println("XXX Reading File");
+        Log.d(TAG, "Reading File");
         try {
             FileInputStream fis = new FileInputStream(catalog);
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -44,32 +46,32 @@ public class Catalog implements Serializable {
             ois.close();
             fis.close();
         } catch (FileNotFoundException e) {
-            System.out.println("XXX Error Reading File 1");
+            Log.d(TAG, "Error Reading File 1");
             e.printStackTrace();
         } catch (IOException e) {
-            System.out.println("XXX Error Reading File 2");
+            Log.d(TAG, "Error Reading File 2");
             e.printStackTrace();
             catalog.delete();
         } catch (ClassNotFoundException e) {
-            System.out.println("XXX Error Reading File 3");
+            Log.d(TAG, "Error Reading File 3");
             e.printStackTrace();
         }
     }
 
     private void saveFile(){ //write arraylist to the file
-        System.out.println("XXX Writing File");
+        Log.d(TAG, "Writing File");
         try {
             FileOutputStream fos = new FileOutputStream(catalog, false);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            System.out.println("XXX Writing File object size: "+mItems.size());
+            Log.d(TAG, "Writing File object size: "+mItems.size());
             oos.writeObject(mItems);
             oos.close();
             fos.close();
         } catch (FileNotFoundException e) {
-            System.out.println("XXX Error Writing File 1");
+            Log.d(TAG, "Error Writing File 1");
             e.printStackTrace();
         } catch (IOException e) {
-            System.out.println("XXX Error Writing File 2");
+            Log.d(TAG, "Error Writing File 2");
             e.printStackTrace();
             catalog.delete();
         }
@@ -85,16 +87,16 @@ public class Catalog implements Serializable {
             ois.close();
             fis.close();
         } catch (FileNotFoundException e) {
-            System.out.println("XXX Error Reading File 1");
+            Log.d(TAG, "Error Reading File 1");
             e.printStackTrace();
             return false;
         } catch (IOException e) {
-            System.out.println("XXX Error Reading File 2");
+            Log.d(TAG, "Error Reading File 2");
             e.printStackTrace();
             catalog.delete();
             return false;
         } catch (ClassNotFoundException e) {
-            System.out.println("XXX Error Reading File 3");
+            Log.d(TAG, "Error Reading File 3");
             e.printStackTrace();
             return false;
         }
@@ -102,16 +104,16 @@ public class Catalog implements Serializable {
         try {
             FileOutputStream fos = new FileOutputStream(catalog, false);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            System.out.println("XXX Writing File object size: "+mItems.size());
+            Log.d(TAG, "Writing File object size: "+mItems.size());
             oos.writeObject(mItems);
             oos.close();
             fos.close();
         } catch (FileNotFoundException e) {
-            System.out.println("XXX Error Writing File 1");
+            Log.d(TAG, "Error Writing File 1");
             e.printStackTrace();
             return false;
         } catch (IOException e) {
-            System.out.println("XXX Error Writing File 2");
+            Log.d(TAG, "Error Writing File 2");
             e.printStackTrace();
             catalog.delete();
             return false;
