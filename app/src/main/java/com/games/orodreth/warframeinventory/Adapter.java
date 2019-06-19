@@ -1,6 +1,7 @@
 package com.games.orodreth.warframeinventory;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.ContextMenu;
@@ -46,14 +47,15 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
         imageSource = source;
     }
 
+    @NonNull
     @Override
-    public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(mContext).inflate(R.layout.item, parent, false);
         return new ItemViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(ItemViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         Items currentItem = mItems.get(position);
         String imageUrl;
         if (imageSource==0) imageUrl = new String("https://cdn.warframestat.us/img/"+currentItem.getImageUrl());
@@ -70,7 +72,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
         holder.mTextViewPlats.setText(mContext.getResources().getString(R.string.platinum) + itemPlats);
         holder.mTextViewDucPlat.setText(mContext.getResources().getString(R.string.duc_plat) + stringDucPlat);
         Picasso.with(mContext).load(imageUrl).fit().centerInside().into(holder.mImageView); //working with picasso 2.5.2
-        //Picasso.get().load(imageUrl).fit().centerInside().into(holder.mImageView);        TODO workaroud since with() method is deprecated on future picasso release
+        //Picasso.get().load(imageUrl).fit().centerInside().into(holder.mImageView);        TODO workaround since with() method is deprecated on future picasso release
     }
 
     @Override

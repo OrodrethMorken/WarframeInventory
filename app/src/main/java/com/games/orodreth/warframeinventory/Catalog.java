@@ -1,10 +1,7 @@
 package com.games.orodreth.warframeinventory;
 
 import android.content.Context;
-import android.content.res.AssetManager;
-import android.content.res.Resources;
 import android.util.Log;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,7 +34,7 @@ public class Catalog implements Serializable {
         return mItems;
     }
 
-    private void copyFile(){ //copy the arraylist from the file to mItems
+    private void copyFile(){ //copy the ArrayList from the file to mItems
         Log.d(TAG, "Reading File");
         try {
             FileInputStream fis = new FileInputStream(catalog);
@@ -58,7 +55,7 @@ public class Catalog implements Serializable {
         }
     }
 
-    private void saveFile(){ //write arraylist to the file
+    private void saveFile(){ //write ArrayList to the file
         Log.d(TAG, "Writing File");
         try {
             FileOutputStream fos = new FileOutputStream(catalog, false);

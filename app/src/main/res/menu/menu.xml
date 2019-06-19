@@ -40,7 +40,8 @@
     </item>
     <item android:id="@+id/sorting"
         android:title="@string/sort_duc_plat"
-        app:showAsAction="never"/>item <item android:id="@+id/quit_button"
+        app:showAsAction="never"/>
+    <item android:id="@+id/quit_button"
         android:icon="@drawable/ic_quit"
         android:title="@string/close"
         app:showAsAction="never"/>

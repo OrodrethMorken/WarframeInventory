@@ -18,13 +18,11 @@ public class Storage implements Serializable {
 
     private ArrayList<Inventory> mInventory;
     private File storage;
-    private Context mContext;
     private static final String TAG = "Storage";
 
     public Storage(Context context){
-        mContext = context;
         mInventory = new ArrayList<>();
-        storage = new File(mContext.getFilesDir(), "Storage"); //TODO change from File system to DB system
+        storage = new File(context.getFilesDir(), "Storage"); //TODO change from File system to DB system
     }
 
     public ArrayList<Inventory> getInventory(){
@@ -33,7 +31,7 @@ public class Storage implements Serializable {
         return mInventory;
     }
 
-    private void copyFile(){ //copy the arraylist from the file to mInventory
+    private void copyFile(){ //copy the ArrayList from the file to mInventory
         Log.d(TAG, "Reading File");
         try {
             FileInputStream fis = new FileInputStream(storage);
@@ -54,7 +52,7 @@ public class Storage implements Serializable {
         }
     }
 
-    private void saveFile(){ //write arraylist to the file
+    private void saveFile(){ //write ArrayList to the file
         Log.d(TAG, "Writing File");
         try {
             FileOutputStream fos = new FileOutputStream(storage, false);

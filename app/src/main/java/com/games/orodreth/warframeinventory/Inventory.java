@@ -9,7 +9,7 @@ import java.io.Serializable;
 public class Inventory implements Serializable {
 
     private String mName;
-    private int mQuantity = 0;
+    private int mQuantity;
 
     public Inventory(String name, int quantity) {
         mName = name;
@@ -28,7 +28,7 @@ public class Inventory implements Serializable {
         mQuantity++;
     }
 
-    public void substract(){
+    public void subtract(){
         mQuantity--;
     }
 
