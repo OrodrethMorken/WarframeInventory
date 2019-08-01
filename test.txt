@@ -1,0 +1,7 @@
+<div wpb_text_column wpb_content_element> nuovo titolo da destinarsi </div>
+<span vc_tta-title-text> notizia 1 </span>
+<div vc_tta-panel-body> niente nuove, buone nuove </div>
+<span vc_tta-title-text> notizia 2 </span>
+<div vc_tta-panel-body> il cielo è sempre più blu </div>
+<span vc_tta-title-text> notizia 3 </span>
+<div vc_tta-panel-body> alla fine di kill bill muore bill </div>
