@@ -1,5 +1,5 @@
 <div wpb_text_column wpb_content_element> nuovo titolo da destinarsi </div>
-<span vc_tta-title-text> notizia 1c</span>
+<span vc_tta-title-text> notizia 1d</span>
 <div vc_tta-panel-body> niente nuove, buone nuove eppure qualcosa è cambiato aaab</div>
 <span vc_tta-title-text> notizia 2 </span>
 <div vc_tta-panel-body> il cielo è sempre più blu </div>
