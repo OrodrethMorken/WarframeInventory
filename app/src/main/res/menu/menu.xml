@@ -24,17 +24,17 @@
         android:title="@string/inventory"
         app:showAsAction="never"/>
     <item android:id="@+id/source"
-        android:title="Select Source"
+        android:title="@string/select_source"
         app:showAsAction="never">
         <menu>
             <group android:checkableBehavior="single">
                 <item
                     android:id="@+id/nexus"
-                    android:title="Nexus Hub"
+                    android:title="@string/nexus_hub"
                     android:checked="true"/>
                 <item
                     android:id="@+id/market"
-                    android:title="Warframe.Market" />
+                    android:title="@string/warframe_market" />
             </group>
         </menu>
     </item>

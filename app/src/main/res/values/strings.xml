@@ -4,7 +4,6 @@
     <string name="item_name">Item Name</string>
     <string name="platinum">Platinum:\u0020</string>
     <string name="ducats">Ducats:\u0020</string>
-    <string name="title_activity_test">testActivity</string>
     <string name="update_price">Update Platinum Prices</string>
     <string name="storage_label">Owned:\u0020</string>
     <string name="search">Search</string>
@@ -15,7 +14,27 @@
     <string name="update_all">Update All</string>
     <string name="update">Update</string>
     <string name="sort_duc_plat">Sort Duc/Plat</string>
+    <string name="sort">Sort by</string>
     <string name="sort_az">Sort AZ</string>
     <string name="catalog">Catalog</string>
     <string name="duc_plat">Duc/Plat:</string>
+    <string name="title_activity_navigation_drawer">NavigationDrawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Warframe Inventory</string>
+    <string name="nav_header_desc">Image header</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_save">Save</string>
+    <string name="menu_search">Search</string>
+    <string name="select_source">Select Source</string>
+    <string name="nexus_hub">Nexus Hub</string>
+    <string name="warframe_market">Warframe.Market</string>
+    <string name="sort_by_alphabet_a_z">Sort by alphabet A-Z</string>
+    <string name="sort_by_ducat_price">Sort by Ducat price</string>
+    <string name="sort_by_platinum_price">Sort by Platinum price</string>
+    <string name="sort_by_ratio_duc_plat">Sort by ratio between Ducats and Platinum</string>
+    <string name="credits">Credits</string>
+    <string name="no_zero">Exclude value of Zero</string>
+    <string name="reverse_the_order">Reverse the order</string>
 </resources>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <RadioButton
+        android:id="@+id/sort_az"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sort_by_alphabet_a_z" />
+    <RadioButton
+        android:id="@+id/sort_duc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sort_by_ducat_price"/>
+    <RadioButton
+        android:id="@+id/sort_plat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sort_by_platinum_price"/>
+    <RadioButton
+        android:id="@+id/sort_duc-plat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sort_by_ratio_duc_plat"/>
+    <CheckBox
+        android:id="@+id/no_zero"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_zero"/>
+    <CheckBox
+        android:id="@+id/inverse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/reverse_the_order"/>
+
+</RadioGroup>

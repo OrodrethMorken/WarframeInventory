@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
     public static final int ADD_ONE = 666;
@@ -58,19 +59,18 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         Items currentItem = mItems.get(position);
         String imageUrl;
-        if (imageSource==0) imageUrl = new String("https://cdn.warframestat.us/img/"+currentItem.getImageUrl());
-        else imageUrl = new String("https://warframe.market/static/assets/"+currentItem.getImageUrl());
+        if (imageSource==0) imageUrl = "https://cdn.warframestat.us/img/" + currentItem.getImageUrl();
+        else imageUrl = "https://warframe.market/static/assets/" + currentItem.getImageUrl();
         //String imageUrl = currentItem.getImageUrl();
         String itemName = currentItem.getItem();
         int itemDucats = currentItem.getDucats();
         int itemPlats = currentItem.getPlat();
         float itemDucPlat = currentItem.getDucPlat();
-        String stringDucPlat = String.format("%.2f",itemDucPlat);
 
         holder.mTextViewItem.setText(itemName);
-        holder.mTextViewDucats.setText(mContext.getResources().getString(R.string.ducats) + itemDucats);
-        holder.mTextViewPlats.setText(mContext.getResources().getString(R.string.platinum) + itemPlats);
-        holder.mTextViewDucPlat.setText(mContext.getResources().getString(R.string.duc_plat) + stringDucPlat);
+        holder.mTextViewDucats.setText(String.format(Locale.getDefault(),"%s%d", mContext.getResources().getString(R.string.ducats), itemDucats));
+        holder.mTextViewPlats.setText(String.format(Locale.getDefault(),"%s%d", mContext.getResources().getString(R.string.platinum), itemPlats));
+        holder.mTextViewDucPlat.setText(String.format(Locale.getDefault(),"%s %.2f", mContext.getResources().getString(R.string.duc_plat), itemDucPlat));
         Picasso.with(mContext).load(imageUrl).fit().centerInside().into(holder.mImageView); //working with picasso 2.5.2
         //Picasso.get().load(imageUrl).fit().centerInside().into(holder.mImageView);        TODO workaround since with() method is deprecated on future picasso release
     }

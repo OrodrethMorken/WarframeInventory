@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_search"
+            android:icon="@drawable/ic_search"
+            android:title="@string/menu_search" />
+        <item
+            android:id="@+id/nav_inventory"
+            android:icon="@drawable/ic_inventory"
+            android:title="@string/inventory" />
+        <item
+            android:id="@+id/nav_update"
+            android:icon="@drawable/ic_refresh_button"
+            android:title="@string/update" />
+        <item
+            android:id="@+id/nav_source"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/select_source"/>
+        <item
+            android:id="@+id/nav_save"
+            android:icon="@drawable/ic_save"
+            android:title="@string/menu_save" />
+        <item
+            android:id="@+id/nav_sort"
+            android:icon="@drawable/ic_sort_duc"
+            android:title="@string/sort"/>
+        <item
+            android:id="@+id/nav_credit"
+            android:title="@string/credits"/>
+        <item
+            android:id="@+id/nav_quit"
+            android:icon="@drawable/ic_quit"
+            android:title="@string/close"/>
+    </group>
+
+</menu>
