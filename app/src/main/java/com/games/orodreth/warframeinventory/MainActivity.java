@@ -40,6 +40,14 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.games.orodreth.warframeinventory.nexus.NexusApi;
+import com.games.orodreth.warframeinventory.nexus.ObjectNexus;
+import com.games.orodreth.warframeinventory.nexus.ObjectWfcd;
+import com.games.orodreth.warframeinventory.nexus.WfcdApi;
+import com.games.orodreth.warframeinventory.warframeMarket.DucatsWFM;
+import com.games.orodreth.warframeinventory.warframeMarket.ObjectWFM;
+import com.games.orodreth.warframeinventory.warframeMarket.PlatinumWFM;
+import com.games.orodreth.warframeinventory.warframeMarket.WfMaApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,7 +56,12 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.function.Predicate;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.games.orodreth.warframeinventory.Adapter.ADD_ONE;
 import static com.games.orodreth.warframeinventory.Adapter.REMOVE_ALL;
@@ -66,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     public static final String EXTRA_NO_ZERO = "com.games.orodreth.warframeinventory.no_zero";
     public static final String EXTRA_INVERSE = "com.games.orodreth.warframeinventory.inverse";
     public static final String SHARED = "com.games.orodreth.warframeinventory.shared";
-    public static final int STORAGE_VALUE = 17 ;
+    public static final int STORAGE_VALUE = 17;
     public static final int SORT_AZ = 0;
     public static final int SORT_DUCPLAT = 1;
     public static final int SORT_DUC = 2;
@@ -99,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     /**
      * on Creation, check if exist an ArrayList of items, if not create one, and update the platinum prices
+     *
      * @param savedInstanceState savedState
      */
     @Override
@@ -114,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(searchToggle){
+                /*if(searchToggle){
                     searchToggle = false;
                     mSearch.setVisibility(View.GONE);
                     keyboard();
@@ -122,7 +136,8 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                     searchToggle = true;
                     mSearch.setVisibility(View.VISIBLE);
                     keyboard();
-                }
+                }*/
+                retrofitWFM();
             }
         });
 
@@ -138,9 +153,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         logo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(creditCounter<7){
-                    creditCounter ++;
-                }else{
+                if (creditCounter < 7) {
+                    creditCounter++;
+                } else {
                     creditCounter = 0;
                     CreditDialog creditDialog = new CreditDialog();
                     creditDialog.show(getSupportFragmentManager(), Integer.toString(creditCounter));
@@ -185,14 +200,14 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         mRequestQueue = Volley.newRequestQueue(this);
         mCatalog = new Catalog(this);
         mStorage = new Storage(this);
-        if(mCatalog.exist()){ //check if the list already exist
+        if (mCatalog.exist()) { //check if the list already exist
             mItems = mCatalog.getItems(); //and get it from the file
             draw();
-        }else{
-            if(sourceSelected==0) parseJSON2();
+        } else {
+            if (sourceSelected == 0) parseJSON2();
             else parseJSON();
         }
-        if(mStorage.exist()){
+        if (mStorage.exist()) {
             mInventory = mStorage.getInventory();
         }
     }
@@ -201,9 +216,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
      * Search the JSON list of Warframe.market and register all the items
      */
 
-    private void parseJSON(){
+    private void parseJSON() {
         String url = "https://api.warframe.market/v1/items";
-        if(hasConnection()) {
+        if (hasConnection()) {
             mItems = new ArrayList<>();
 
             mProgressStatus = 0;
@@ -276,8 +291,8 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
      * search the ducat value of the items that are in the list
      */
 
-    private void ducats () {
-        if(hasConnection()) {
+    private void ducats() {
+        if (hasConnection()) {
             mProgressStatus = 0;  //reset progress value
             //mProgressBar.setVisibility(View.VISIBLE);
             new Thread(new Runnable() { //start thread were search ducat values
@@ -312,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                                             } else mProgressStatus = mItems.size();
                                         } catch (JSONException e) {
                                             //e.printStackTrace();
-                                            Log.d(TAG, "no ducat value j: "+ finalJ);
+                                            Log.d(TAG, "no ducat value j: " + finalJ);
                                             mProgressStatus++;
                                             if (mProgressStatus % 30 == 0)
                                                 Toast.makeText(MainActivity.this, "" + finalJ + " of " + mItems.size(), Toast.LENGTH_SHORT).show();
@@ -367,8 +382,8 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
      * search the platinum value of the items that are in the list
      */
 
-    private void plats () {
-        if(hasConnection()) {
+    private void plats() {
+        if (hasConnection()) {
             mProgressStatus = 0;  //reset progress value
             //mProgressBar.setVisibility(View.VISIBLE);
             new Thread(new Runnable() { //start thread were search plat values
@@ -427,7 +442,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                                             }
                                         } catch (JSONException e) {
                                             //e.printStackTrace();
-                                            Log.d(TAG, "no plat value j: "+finalJ);
+                                            Log.d(TAG, "no plat value j: " + finalJ);
                                             mProgressStatus++;
                                             //if(mProgressStatus%30==0) Toast.makeText(MainActivity.this, ""+finalJ+" of "+mItems.size(), Toast.LENGTH_SHORT).show();
                                         }
@@ -475,8 +490,8 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         }
     }
 
-    private void ducPlat(){
-        if(hasConnection()) {
+    private void ducPlat() {
+        if (hasConnection()) {
             for (Items item : mItems) {
                 if (item.getPlat() != 0) {
                     float mDucPlat = (float) item.getDucats() / (float) item.getPlat();
@@ -494,21 +509,22 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
      * create and refresh the recyclerView
      */
 
-    private void draw(){
-            if (mAdapter != null) {
-                filter(mSearch.getText().toString());
-                mAdapter.setImageSource(sourceSelected);
-                mAdapter.notifyDataSetChanged();
-            } else {
-                mAdapter = new Adapter(MainActivity.this, mItems);
-                mRecyclerView.setAdapter(mAdapter);
-                mAdapter.setImageSource(sourceSelected);
-                mAdapter.setOnItemListener(MainActivity.this);
-            }
+    private void draw() {
+        if (mAdapter != null) {
+            filter(mSearch.getText().toString());
+            mAdapter.setImageSource(sourceSelected);
+            mAdapter.notifyDataSetChanged();
+        } else {
+            mAdapter = new Adapter(MainActivity.this, mItems);
+            mRecyclerView.setAdapter(mAdapter);
+            mAdapter.setImageSource(sourceSelected);
+            mAdapter.setOnItemListener(MainActivity.this);
+        }
     }
 
     /**
      * Function called when clicking on an item
+     *
      * @param position is the position on the index
      */
 
@@ -516,9 +532,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     public void onItemClick(int position) {
         Intent itemIntent = new Intent(this, ItemActivity.class);
         Items selectedItem;
-        if(mSearch.getText().toString().isEmpty() && focus == ADAPTER_CATALOG) { //check if there is a filter applied
+        if (mSearch.getText().toString().isEmpty() && focus == ADAPTER_CATALOG) { //check if there is a filter applied
             selectedItem = mItems.get(position);
-        }else selectedItem = filteredList.get(position);
+        } else selectedItem = filteredList.get(position);
         int j = -1;
         if (!mInventory.isEmpty()) {
             for (int i = 0; i < mInventory.size(); i++) {
@@ -534,9 +550,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         itemIntent.putExtra(EXTRA_DUCATS, selectedItem.getDucats());
         itemIntent.putExtra(EXTRA_PLATINUM, selectedItem.getPlat());
         itemIntent.putExtra(EXTRA_DUC_PLAT, selectedItem.getDucPlat());
-        if(j<0){
+        if (j < 0) {
             itemIntent.putExtra(EXTRA_STORAGE, 0);
-        }else {
+        } else {
             itemIntent.putExtra(EXTRA_STORAGE, mInventory.get(j).getQuantity());
         }
         //startActivity(itemIntent);
@@ -545,6 +561,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     /**
      * Visualize the buttons on the toolbar
+     *
      * @param menu menu
      * @return true
      */
@@ -558,6 +575,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     /**
      * Function for the button on the toolbar
+     *
      * @param item button selected
      * @return true
      */
@@ -636,40 +654,41 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     /**
      * active the buttons of the contextual menu
+     *
      * @param item selected item on the menu
      * @return true
      */
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         String name;
-        if(mSearch.getText().toString().isEmpty() && focus == ADAPTER_CATALOG) { //check if there is a filter applied
+        if (mSearch.getText().toString().isEmpty() && focus == ADAPTER_CATALOG) { //check if there is a filter applied
             name = mItems.get(item.getGroupId()).getItem();
-        }else name = filteredList.get(item.getGroupId()).getItem();
-        switch (item.getItemId()){
+        } else name = filteredList.get(item.getGroupId()).getItem();
+        switch (item.getItemId()) {
             case ADD_ONE:
-                if(mInventory.isEmpty()){
-                    mInventory.add(new Inventory(name,1));
+                if (mInventory.isEmpty()) {
+                    mInventory.add(new Inventory(name, 1));
                     filter(mSearch.getText().toString());
-                }else {
+                } else {
                     for (Inventory i : mInventory) {
                         if (name.equals(i.getName())) {
                             i.add();
                             return true;
                         }
                     }
-                    mInventory.add(new Inventory(name,1));
+                    mInventory.add(new Inventory(name, 1));
                     filter(mSearch.getText().toString());
                 }
                 return true;
             case REMOVE_ONE:
-                if(mInventory.isEmpty()){
+                if (mInventory.isEmpty()) {
                     Toast.makeText(this, "No item to be removed", Toast.LENGTH_SHORT).show();
-                }else{
+                } else {
                     for (Inventory i : mInventory) {
                         if (name.equals(i.getName())) {
-                            if (i.getQuantity() > 1){
+                            if (i.getQuantity() > 1) {
                                 i.subtract();
-                            }else {
+                            } else {
                                 mInventory.remove(i);
                                 filter(mSearch.getText().toString());
                             }
@@ -680,9 +699,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 }
                 return true;
             case REMOVE_ALL:
-                if(mInventory.isEmpty()){
-                Toast.makeText(this, "No item to be removed", Toast.LENGTH_SHORT).show();
-                }else{
+                if (mInventory.isEmpty()) {
+                    Toast.makeText(this, "No item to be removed", Toast.LENGTH_SHORT).show();
+                } else {
                     for (Inventory i : mInventory) {
                         if (name.equals(i.getName())) {
                             mInventory.remove(i);
@@ -700,34 +719,35 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     /**
      * catch the intent with the number of item registered
+     *
      * @param requestCode is the request code send when called the activity
-     * @param resultCode is a response on positive or negative response
-     * @param data the data of the intent on a positive response
+     * @param resultCode  is a response on positive or negative response
+     * @param data        the data of the intent on a positive response
      */
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        switch (requestCode){
+        switch (requestCode) {
             case STORAGE_VALUE:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     int j = -1;
-                    if(!mInventory.isEmpty() && data!= null) {
+                    if (!mInventory.isEmpty() && data != null) {
                         for (int i = 0; i < mInventory.size(); i++) {
                             if (mInventory.get(i).getName().equals(data.getStringExtra(EXTRA_NAME))) {
                                 j = i;
                             }
                         }
-                        if (j < 0 && data.getIntExtra(EXTRA_STORAGE, 0)>0) {
+                        if (j < 0 && data.getIntExtra(EXTRA_STORAGE, 0) > 0) {
                             mInventory.add(new Inventory(data.getStringExtra(EXTRA_NAME), data.getIntExtra(EXTRA_STORAGE, 0)));
-                        }else {
-                            if(j>-1){
-                                if(data.getIntExtra(EXTRA_STORAGE, 0)<1) {
+                        } else {
+                            if (j > -1) {
+                                if (data.getIntExtra(EXTRA_STORAGE, 0) < 1) {
                                     mInventory.remove(j);
                                     filter(mSearch.getText().toString());
                                 } else mInventory.get(j).set(data.getIntExtra(EXTRA_STORAGE, 0));
                             }
                         }
-                    }else if(data!=null && data.getIntExtra(EXTRA_STORAGE, 0)>0) {
+                    } else if (data != null && data.getIntExtra(EXTRA_STORAGE, 0) > 0) {
                         mInventory.add(new Inventory(data.getStringExtra(EXTRA_NAME), data.getIntExtra(EXTRA_STORAGE, 0)));
                     }
                 }
@@ -739,15 +759,15 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     private void filter(String toString) {
         filteredList = new ArrayList<>();
-        if(focus==ADAPTER_CATALOG) {
+        if (focus == ADAPTER_CATALOG) {
             for (Items item : mItems) {
                 if (item.getItem().toLowerCase().contains(toString.toLowerCase())) {
                     filteredList.add(item);
                 }
             }
-        }else {
+        } else {
             for (Items item : mItems) {
-                for(Inventory inv : mInventory){
+                for (Inventory inv : mInventory) {
                     if (item.getItem().toLowerCase().contains(toString.toLowerCase()) && item.getItem().equals(inv.getName())) {
                         filteredList.add(item);
                     }
@@ -757,24 +777,24 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         mAdapter.filteredList(filteredList);
     }
 
-    private void sort(){
+    private void sort() {
         final int order;
-        if(inverse_order){
+        if (inverse_order) {
             order = INVERTED;
-        }else order = 1;
-        switch(sorting){
+        } else order = 1;
+        switch (sorting) {
             case SORT_AZ:
                 Collections.sort(mItems, new Comparator<Items>() {
                     @Override
                     public int compare(Items o1, Items o2) {
-                        return o1.getItem().compareTo(o2.getItem())*order;
+                        return o1.getItem().compareTo(o2.getItem()) * order;
                     }
                 });
-                if(!filteredList.isEmpty()){
+                if (!filteredList.isEmpty()) {
                     Collections.sort(filteredList, new Comparator<Items>() {
                         @Override
                         public int compare(Items o1, Items o2) {
-                            return o1.getItem().compareTo(o2.getItem())*order;
+                            return o1.getItem().compareTo(o2.getItem()) * order;
                         }
                     });
                 }
@@ -783,15 +803,15 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 Collections.sort(mItems, new Comparator<Items>() {
                     @Override
                     public int compare(Items o1, Items o2) {
-                        return Integer.compare(o1.getDucats(), o2.getDucats())*order;
+                        return Integer.compare(o1.getDucats(), o2.getDucats()) * order;
 
                     }
                 });
-                if(!filteredList.isEmpty()){
+                if (!filteredList.isEmpty()) {
                     Collections.sort(filteredList, new Comparator<Items>() {
                         @Override
                         public int compare(Items o1, Items o2) {
-                            return Integer.compare(o1.getDucats(), o2.getDucats())*order;
+                            return Integer.compare(o1.getDucats(), o2.getDucats()) * order;
                         }
                     });
                 }
@@ -800,14 +820,14 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 Collections.sort(mItems, new Comparator<Items>() {
                     @Override
                     public int compare(Items o1, Items o2) {
-                        return Integer.compare(o1.getPlat(), o2.getPlat())*order;
+                        return Integer.compare(o1.getPlat(), o2.getPlat()) * order;
                     }
                 });
-                if(!filteredList.isEmpty()){
+                if (!filteredList.isEmpty()) {
                     Collections.sort(filteredList, new Comparator<Items>() {
                         @Override
                         public int compare(Items o1, Items o2) {
-                            return Integer.compare(o1.getPlat(), o2.getPlat())*order;
+                            return Integer.compare(o1.getPlat(), o2.getPlat()) * order;
                         }
                     });
                 }
@@ -816,14 +836,14 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 Collections.sort(mItems, new Comparator<Items>() {
                     @Override
                     public int compare(Items o1, Items o2) {
-                        return Float.compare(o1.getDucPlat(),o2.getDucPlat())*order;
+                        return Float.compare(o1.getDucPlat(), o2.getDucPlat()) * order;
                     }
                 });
-                if(!filteredList.isEmpty()){
+                if (!filteredList.isEmpty()) {
                     Collections.sort(filteredList, new Comparator<Items>() {
                         @Override
                         public int compare(Items o1, Items o2) {
-                            return Float.compare(o1.getDucPlat(),o2.getDucPlat())*order;
+                            return Float.compare(o1.getDucPlat(), o2.getDucPlat()) * order;
                         }
                     });
                 }
@@ -842,8 +862,8 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     /**
      * new parser for the JSON of Warframe Community
      */
-    private void parseJSON2(){
-        if(hasConnection()) {
+    private void parseJSON2() {
+        if (hasConnection()) {
             String url = "https://raw.githubusercontent.com/WFCD/warframe-items/development/data/json/All.json";
             mItems = new ArrayList<>();
 
@@ -924,8 +944,8 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     /**
      * Look plat prices on NexusHub
      */
-    private void plats2(){
-        if(hasConnection()) {
+    private void plats2() {
+        if (hasConnection()) {
             mProgressStatus = 0;  //reset progress value
             new Thread(new Runnable() { //start thread were search plat values
                 @Override
@@ -1038,6 +1058,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     /**
      * manage the navigation bar
+     *
      * @param item the item that was selected
      * @return true
      */
@@ -1047,15 +1068,15 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        switch (id){
+        switch (id) {
             case R.id.nav_search:
                 creditCounter = 0;
-                if(searchToggle){
+                if (searchToggle) {
                     searchToggle = false;
                     //mSearch.setText("");
                     mSearch.setVisibility(View.GONE);
                     keyboard();
-                }else {
+                } else {
                     searchToggle = true;
                     mSearch.setVisibility(View.VISIBLE);
                     keyboard();
@@ -1063,11 +1084,11 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 break;
             case R.id.nav_inventory:
                 creditCounter = 0;
-                if(focus==ADAPTER_CATALOG){
+                if (focus == ADAPTER_CATALOG) {
                     focus = ADAPTER_STORAGE;
                     item.setTitle(getResources().getString(R.string.catalog));
                     item.setIcon(R.drawable.ic_catalog);
-                }else {
+                } else {
                     focus = ADAPTER_CATALOG;
                     item.setTitle(getResources().getString(R.string.inventory));
                     item.setIcon(R.drawable.ic_inventory);
@@ -1077,7 +1098,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
             case R.id.nav_update:
                 creditCounter = 0;
                 Toast.makeText(this, "Updating Platinum", Toast.LENGTH_SHORT).show();
-                if(sourceSelected==0)plats2();
+                if (sourceSelected == 0) plats2();
                 else plats();
                 break;
             case R.id.nav_source:
@@ -1090,10 +1111,10 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 break;
             case R.id.nav_save:
                 creditCounter = 0;
-                Toast.makeText(this,"Saving", Toast.LENGTH_SHORT).show();
-                if(!mInventory.isEmpty()){
+                Toast.makeText(this, "Saving", Toast.LENGTH_SHORT).show();
+                if (!mInventory.isEmpty()) {
                     mStorage.write(mInventory);
-                }else Toast.makeText(this,"No item in the Inventory", Toast.LENGTH_SHORT).show();
+                } else Toast.makeText(this, "No item in the Inventory", Toast.LENGTH_SHORT).show();
                 saveData();
                 break;
             case R.id.nav_sort:
@@ -1124,7 +1145,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
             case R.id.nav_quit:
                 creditCounter = 0;
                 Toast.makeText(this, "Closing App", Toast.LENGTH_SHORT).show();
-                if(!mInventory.isEmpty()){
+                if (!mInventory.isEmpty()) {
                     mStorage.write(mInventory);
                 }
                 finish();
@@ -1140,14 +1161,14 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     /**
      * manage opening and closing of the keyboard
      */
-    private void keyboard(){
+    private void keyboard() {
         View view = this.getCurrentFocus();
-        if (view != null){
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-            if(searchToggle){
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (searchToggle) {
                 imm.showSoftInput(view, 0);
                 mSearch.requestFocus();
-            }else {
+            } else {
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
         }
@@ -1155,10 +1176,10 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     @Override
     public void selectSource(int source) {
-        if (source==0){
+        if (source == 0) {
             sourceSelected = 0;
             parseJSON2();
-        }else if(source==1){
+        } else if (source == 1) {
             sourceSelected = 1;
             parseJSON();
         }
@@ -1167,23 +1188,22 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     }
 
 
-
-    private boolean hasConnection(){
+    private boolean hasConnection() {
         ConnectivityManager cm =
-                (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null &&
                 activeNetwork.isConnected();
     }
 
-    private void loadData(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED,MODE_PRIVATE);
+    private void loadData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED, MODE_PRIVATE);
         sourceSelected = sharedPreferences.getInt(EXTRA_SOURCE, 0);
     }
 
-    private void saveData(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED,MODE_PRIVATE);
+    private void saveData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.putInt(EXTRA_SOURCE, sourceSelected);
@@ -1203,46 +1223,46 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
      * Remove or restore the data sorted with value of zero
      */
 
-    private void removeZero(){
+    private void removeZero() {
         filter(mSearch.getText().toString()); //reform the array so to restore eventualy data lost from the previews sort
-        if(no_zero){
-            if(!filteredList.isEmpty()){  //if is filtered
+        if (no_zero) {
+            if (!filteredList.isEmpty()) {  //if is filtered
                 ArrayList<Items> newFiltered = new ArrayList<>();
-                switch (sorting){
+                switch (sorting) {
                     case SORT_DUC:
-                        for (Items i:filteredList){
-                            if (i.getDucats()!=0) newFiltered.add(i);
+                        for (Items i : filteredList) {
+                            if (i.getDucats() != 0) newFiltered.add(i);
                         }
                         filteredList = newFiltered;
                         break;
                     case SORT_PLAT:
-                        for(Items i:filteredList){
-                            if (i.getPlat()!=0) newFiltered.add(i);
+                        for (Items i : filteredList) {
+                            if (i.getPlat() != 0) newFiltered.add(i);
                         }
                         filteredList = newFiltered;
                         break;
                     case SORT_DUCPLAT:
-                        for(Items i:filteredList){
-                            if (i.getDucPlat()!=0) newFiltered.add(i);
+                        for (Items i : filteredList) {
+                            if (i.getDucPlat() != 0) newFiltered.add(i);
                         }
                         filteredList = newFiltered;
                         break;
                 }
-            }else {
-                switch (sorting){
+            } else {
+                switch (sorting) {
                     case SORT_DUC:
-                        for(Items i:mItems){
-                            if (i.getDucats()!=0) filteredList.add(i);
+                        for (Items i : mItems) {
+                            if (i.getDucats() != 0) filteredList.add(i);
                         }
                         break;
                     case SORT_PLAT:
-                        for(Items i:mItems){
-                            if (i.getPlat()!=0) filteredList.add(i);
+                        for (Items i : mItems) {
+                            if (i.getPlat() != 0) filteredList.add(i);
                         }
                         break;
                     case SORT_DUCPLAT:
-                        for(Items i:mItems){
-                            if (i.getDucPlat()!=0) filteredList.add(i);
+                        for (Items i : mItems) {
+                            if (i.getDucPlat() != 0) filteredList.add(i);
                         }
                         break;
                 }
@@ -1288,5 +1308,130 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         focus = savedInstanceState.getInt(EXTRA_STORAGE);
         filter(mSearch.getText().toString());
         sort();
+    }
+
+    private void retrofitNexus() {
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://raw.githubusercontent.com/WFCD/warframe-items/development/data/json/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        WfcdApi wfcdApi = retrofit.create(WfcdApi.class);
+
+        Call<List<ObjectWfcd>> listCall = wfcdApi.getItems();
+        listCall.enqueue(new Callback<List<ObjectWfcd>>() {
+            @Override
+            public void onResponse(Call<List<ObjectWfcd>> call, retrofit2.Response<List<ObjectWfcd>> response) {
+                if (!response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: code: " + response.code());
+                    return;
+                }
+
+                List<ObjectWfcd> items = response.body();
+                int i = items.get(0).getComponents().get(0).getDucats();
+            }
+
+            @Override
+            public void onFailure(Call<List<ObjectWfcd>> call, Throwable t) {
+                Log.d(TAG, "onFailure: " + t.getMessage());
+            }
+        });
+
+        NexusApi nexusApi = retrofit.create(NexusApi.class);
+        Call<List<ObjectNexus>> listPrice = nexusApi.getPrices();
+        listPrice.enqueue(new Callback<List<ObjectNexus>>() {
+            @Override
+            public void onResponse(Call<List<ObjectNexus>> call, retrofit2.Response<List<ObjectNexus>> response) {
+                if (!response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: code: " + response.code());
+                    return;
+                }
+
+                List<ObjectNexus> prices = response.body();
+            }
+
+            @Override
+            public void onFailure(Call<List<ObjectNexus>> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void retrofitWFM(){
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.warframe.market/v1/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        final WfMaApi wfMaApi = retrofit.create(WfMaApi.class);
+        Call<ObjectWFM> listObject = wfMaApi.getItems();
+        listObject.enqueue(new Callback<ObjectWFM>() {
+            @Override
+            public void onResponse(Call<ObjectWFM> call, retrofit2.Response<ObjectWFM> response) {
+                if(!response.isSuccessful()){
+                    Log.d(TAG, "onResponse: code: "+response.code());
+                    return;
+                }
+                ObjectWFM objectWFM = response.body();
+                mItems = new ArrayList<>();
+                for (ObjectWFM.Payload.WFItems object:objectWFM.getPayload().getItems()) {
+                    mItems.add(new Items(object.getThumb(),object.getItem_name(),object.getUrl_name(),object.getId()));
+                }
+                for (int i=0; i<mItems.size(); i++
+                     ) {
+                    Call<DucatsWFM> ducatsWFMCall = wfMaApi.getDucats(mItems.get(i).getUrl());
+                    final int finalI = i;
+                    ducatsWFMCall.enqueue(new Callback<DucatsWFM>() {
+                        @Override
+                        public void onResponse(Call<DucatsWFM> call, retrofit2.Response<DucatsWFM> response) {
+                            if(!response.isSuccessful()){
+                                Log.d(TAG, "onResponse: code: "+response.code());
+                            }
+                            DucatsWFM ducatsWFM = response.body();
+                            String id = ducatsWFM.getPayload().getItem().getId();
+                            for (DucatsWFM.Payload.Item.ItemInSet item:ducatsWFM.getPayload().getItem().getItems_in_set()) {
+                                if(item.getId().equals(id)){
+                                    mItems.get(finalI).setDucat(item.getDucats());
+                                    break;
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<DucatsWFM> call, Throwable t) {
+                            Log.d(TAG, "onFailure: "+t.getMessage());
+                        }
+                    });
+
+                    Call<PlatinumWFM> platinumWFMCall = wfMaApi.getstatistics(mItems.get(i).getUrl());
+                    platinumWFMCall.enqueue(new Callback<PlatinumWFM>() {
+                        @Override
+                        public void onResponse(Call<PlatinumWFM> call, retrofit2.Response<PlatinumWFM> response) {
+                            if(!response.isSuccessful()){
+                                Log.d(TAG, "onResponse: code: "+response.code());
+                                return;
+                            }
+                            PlatinumWFM platinumWFM = response.body();
+                            List<PlatinumWFM.Payload.StatClose.Orders> orders = platinumWFM.getPayload().getStatistics_closed().getOrders();
+                            if(orders.isEmpty()) return;
+                            mItems.get(finalI).setPlat(orders.get(orders.size()-1).getMin_price());
+                            mItems.get(finalI).setPlatAvg((int)orders.get(orders.size()-1).getMedian());
+                            //memorizzare i valori di platinum e valore medio
+                            mAdapter.notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void onFailure(Call<PlatinumWFM> call, Throwable t) {
+                            Log.d(TAG, "onFailure: "+t.getMessage());
+                        }
+                    });
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ObjectWFM> call, Throwable t) {
+                Log.d(TAG, "onFailure: "+t.getMessage());
+            }
+        });
     }
 }
