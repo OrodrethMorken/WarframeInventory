@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         if (mStorage.exist()) {
             mInventory = mStorage.getInventory();
         }
-        viewModel.getCatalogNexus();
+        viewModel.getCatalogRetrofit();
     }
 
 

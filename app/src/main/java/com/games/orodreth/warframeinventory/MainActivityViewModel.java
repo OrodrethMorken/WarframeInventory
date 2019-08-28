@@ -33,8 +33,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         return repository.getInventory();
     }
 
-    public void getCatalogNexus(){
-        repository.getCatalogNexus();
+    public void getCatalogRetrofit(){
+        repository.getCatalogRetrofit();
     }
 
     public int getCount(){

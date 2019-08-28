@@ -11,6 +11,7 @@ import com.games.orodreth.warframeinventory.repository.database.InventoryDao;
 import com.games.orodreth.warframeinventory.repository.database.Items;
 import com.games.orodreth.warframeinventory.repository.database.ItemsDao;
 import com.games.orodreth.warframeinventory.repository.nexus.RetrofitNexus;
+import com.games.orodreth.warframeinventory.repository.warframeMarket.RetrofitWFM;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -98,8 +99,16 @@ public class Repository {
         new DeleteAllItemAsync(itemsDao).execute();
     }
 
+    public void getCatalogRetrofit() {
+        getCatalogWFM();
+    }
+
     public void getCatalogNexus(){
         new Thread(new RetrofitNexus()).start();
+    }
+
+    public void getCatalogWFM(){
+        new Thread(new RetrofitWFM()).start();
     }
 
     private static class InsertItemAsync extends AsyncTask<Items, Void, Void>{

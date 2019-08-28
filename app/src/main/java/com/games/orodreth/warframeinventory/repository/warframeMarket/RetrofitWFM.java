@@ -2,6 +2,10 @@ package com.games.orodreth.warframeinventory.repository.warframeMarket;
 
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+
+import com.games.orodreth.warframeinventory.repository.Repository;
 import com.games.orodreth.warframeinventory.repository.database.Items;
 
 import java.util.ArrayList;
@@ -17,6 +21,10 @@ public class RetrofitWFM implements Runnable {
     private static final String TAG = "RetrofitWFM";
     private Retrofit retrofit;
     private ArrayList<Items> mItems;
+    private Repository repository;
+    private LiveData<List<Items>> livedata;
+    private Observer<List<Items>> observerDatabase;
+    private Observer<List<Items>> observerPrice;
 
     @Override
     public void run() {
@@ -24,6 +32,7 @@ public class RetrofitWFM implements Runnable {
                 .baseUrl("https://api.warframe.market/v1/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
+        repository = Repository.getInstance();
         buildDatabase();
     }
 
@@ -44,8 +53,7 @@ public class RetrofitWFM implements Runnable {
                     item.setUrlWFM(object.getUrl_name());
                     mItems.add(item);
                 }
-                for (int i=0; i<mItems.size(); i++
-                ) {
+                for (int i=0; i<mItems.size(); i++) {
                     Call<DucatsWFM> ducatsWFMCall = wfMaApi.getDucats(mItems.get(i).getUrlWFM());
                     final int finalI = i;
                     ducatsWFMCall.enqueue(new Callback<DucatsWFM>() {
@@ -70,7 +78,7 @@ public class RetrofitWFM implements Runnable {
                         }
                     });
                 }
-
+                checkDatabase();
             }
 
             @Override
@@ -80,8 +88,50 @@ public class RetrofitWFM implements Runnable {
         });
     }
 
-    private void updatePrice(){
+    private void checkDatabase(){
+        livedata = repository.getCatalog("");
+        observerDatabase = new Observer<List<Items>>() {
+            @Override
+            public void onChanged(List<Items> items) {
+                updateDatabase(items);
+            }
+        };
+        livedata.observeForever(observerDatabase);
+    }
+
+    private void updateDatabase(List<Items> items){
+        for (Items object:mItems) {
+            Items found = null;
+            for (Items i :items) {
+                if(i.getName().equals(object.getName())){
+                    found = i;
+                    break;
+                }
+            }
+            if(found != null){
+                //update?
+            }else {
+                repository.insertItem(object);
+            }
+        }
+        livedata.removeObserver(observerDatabase);
+        checkPrice();
+    }
+
+    private void checkPrice(){
+        livedata = repository.getCatalog("");
+        observerPrice = new Observer<List<Items>>() {
+            @Override
+            public void onChanged(List<Items> items) {
+                updatePrice(items);
+            }
+        };
+        livedata.observeForever(observerPrice);
+    }
+
+    private void updatePrice(List<Items> items){
         WfMaApi wfMaApi = retrofit.create(WfMaApi.class);
+        mItems = (ArrayList<Items>) items;
         for (int i=0; i < mItems.size(); i++) {
             if(mItems.get(i).getUrlWFM()==null){
                 mItems.get(i).setUrlWFM(mItems.get(i).getName().toLowerCase().replace(" ","_"));
@@ -100,7 +150,7 @@ public class RetrofitWFM implements Runnable {
                     if (orders.isEmpty()) return;
                     mItems.get(finalI).setPlat(orders.get(orders.size() - 1).getMin_price());
                     mItems.get(finalI).setPlatAvg((int) orders.get(orders.size() - 1).getMedian());
-                    //repository.updatePrice(mItems.get(finalI); TODO update prize on database
+                    repository.updateItem(mItems.get(finalI));
                 }
 
                 @Override
@@ -109,5 +159,6 @@ public class RetrofitWFM implements Runnable {
                 }
             });
         }
+        livedata.removeObserver(observerPrice);
     }
 }
