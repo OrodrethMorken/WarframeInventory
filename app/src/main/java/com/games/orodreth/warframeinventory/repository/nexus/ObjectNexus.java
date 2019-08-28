@@ -1,4 +1,4 @@
-package com.games.orodreth.warframeinventory.nexus;
+package com.games.orodreth.warframeinventory.repository.nexus;
 
 
 import com.google.gson.annotations.SerializedName;
@@ -10,7 +10,7 @@ public class ObjectNexus {
     @SerializedName("name")
     private String name;
 
-    private List<ObjectNexus>[] components;
+    private List<ObjectNexus> components;
 
     private Prices prices;
 
@@ -18,7 +18,7 @@ public class ObjectNexus {
         return name;
     }
 
-    public List<ObjectNexus>[] getComponents() {
+    public List<ObjectNexus> getComponents() {
         return components;
     }
 
@@ -26,21 +26,21 @@ public class ObjectNexus {
         return prices;
     }
 
-    private class Prices {
+    public class Prices {
         private Selling selling;
 
         public Selling getSelling() {
             return selling;
         }
 
-        private class Selling {
+        public class Selling {
             private Current current;
 
             public Current getCurrent() {
                 return current;
             }
 
-            private class Current{
+            public class Current{
                 private int min;
                 private int median;
 

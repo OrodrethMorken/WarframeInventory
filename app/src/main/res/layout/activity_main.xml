@@ -18,7 +18,7 @@
         android:layout_below="@+id/toolbar_main"
         android:max="100" />
 
-    <EditText
+    <SearchView
         android:id="@+id/search_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,12 +27,12 @@
         android:hint="@string/search"
         android:visibility="gone" />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/search_item"
         android:background="@android:color/darker_gray">
-    </android.support.v7.widget.RecyclerView>
+    </androidx.recyclerview.widget.RecyclerView>
 
 </RelativeLayout>

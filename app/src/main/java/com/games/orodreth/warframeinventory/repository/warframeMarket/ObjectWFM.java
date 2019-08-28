@@ -1,4 +1,4 @@
-package com.games.orodreth.warframeinventory.warframeMarket;
+package com.games.orodreth.warframeinventory.repository.warframeMarket;
 
 import java.util.List;
 

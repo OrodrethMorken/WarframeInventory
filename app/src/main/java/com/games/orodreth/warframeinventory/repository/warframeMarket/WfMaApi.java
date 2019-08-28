@@ -1,8 +1,4 @@
-package com.games.orodreth.warframeinventory.warframeMarket;
-
-import com.games.orodreth.warframeinventory.nexus.ObjectWfcd;
-
-import java.util.List;
+package com.games.orodreth.warframeinventory.repository.warframeMarket;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

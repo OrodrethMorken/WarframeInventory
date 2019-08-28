@@ -3,6 +3,8 @@ package com.games.orodreth.warframeinventory;
 import android.content.Context;
 import android.util.Log;
 
+import com.games.orodreth.warframeinventory.repository.database.Inventory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

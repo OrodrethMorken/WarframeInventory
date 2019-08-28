@@ -1,4 +1,4 @@
-package com.games.orodreth.warframeinventory.nexus;
+package com.games.orodreth.warframeinventory.repository.nexus;
 
 import java.util.List;
 
