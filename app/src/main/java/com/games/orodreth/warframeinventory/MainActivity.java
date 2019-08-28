@@ -2,14 +2,12 @@ package com.games.orodreth.warframeinventory;
 
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
-import android.os.SystemClock;
+
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.games.orodreth.warframeinventory.repository.database.Inventory;
 import com.games.orodreth.warframeinventory.repository.database.Items;
@@ -23,40 +21,25 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import static com.games.orodreth.warframeinventory.Adapter.ADD_ONE;
@@ -89,8 +72,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     private ArrayList<Items> filteredList;
     private ArrayList<Inventory> mInventory;
     private RequestQueue mRequestQueue;
-    private Catalog mCatalog;
-    private Storage mStorage;
     private ProgressBar mProgressBar;
     private Handler mHandler = new Handler();
     private int focus; //determine if it's visible the catalog or the storage
@@ -102,8 +83,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     private int sourceSelected;
 
     private MainActivityViewModel viewModel;
-
-    private int mProgressStatus = 0;
     private int creditCounter = 0;
 
     private static final String TAG = "MainActivity";
@@ -204,22 +183,23 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
             }
         });
 
-        mItems = new ArrayList<>();
-        filteredList = new ArrayList<>();
-        mInventory = new ArrayList<>();
+        viewModel.getLoadingProgress().observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer progress) {
+                mProgressBar.setProgress(progress);
+            }
+        });
+
+        viewModel.getLoadingMax().observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer size) {
+                mProgressBar.setMax(size);
+            }
+        });
         focus = ADAPTER_CATALOG;
         sorting = SORT_AZ;
 
         mRequestQueue = Volley.newRequestQueue(this);
-        mCatalog = new Catalog(this);
-        mStorage = new Storage(this);
-        if (mCatalog.exist()) { //check if the list already exist
-            mItems = mCatalog.getItems(); //and get it from the file
-        } else {
-        }
-        if (mStorage.exist()) {
-            mInventory = mStorage.getInventory();
-        }
         viewModel.getCatalogRetrofit();
     }
 
@@ -379,7 +359,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     @Override
     protected void onDestroy() {
-        mStorage.write(mInventory);
         super.onDestroy();
     }
 
@@ -447,7 +426,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 creditCounter = 0;
                 Toast.makeText(this, "Saving", Toast.LENGTH_SHORT).show();
                 if (!mInventory.isEmpty()) {
-                    mStorage.write(mInventory);
                 } else Toast.makeText(this, "No item in the Inventory", Toast.LENGTH_SHORT).show();
                 saveData();
                 break;
@@ -480,7 +458,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 creditCounter = 0;
                 Toast.makeText(this, "Closing App", Toast.LENGTH_SHORT).show();
                 if (!mInventory.isEmpty()) {
-                    mStorage.write(mInventory);
                 }
                 finish();
             default:

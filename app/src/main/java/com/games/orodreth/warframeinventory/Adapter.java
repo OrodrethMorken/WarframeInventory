@@ -79,6 +79,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
 
     public void setItemList(List<Items> items){
         mItems = (ArrayList<Items>) items;
+        notifyDataSetChanged();
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {

@@ -25,6 +25,8 @@ public class RetrofitWFM implements Runnable {
     private LiveData<List<Items>> livedata;
     private Observer<List<Items>> observerDatabase;
     private Observer<List<Items>> observerPrice;
+    private Observer<List<Items>> observerDucats;
+    private WfMaApi wfMaApi;
 
     @Override
     public void run() {
@@ -33,11 +35,13 @@ public class RetrofitWFM implements Runnable {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         repository = Repository.getInstance();
+        livedata = repository.getCatalog("%%");
+        wfMaApi = retrofit.create(WfMaApi.class);
         buildDatabase();
     }
 
     private void buildDatabase(){
-        final WfMaApi wfMaApi = retrofit.create(WfMaApi.class);
+        repository.deleteAllItems();
         Call<ObjectWFM> listObject = wfMaApi.getItems();
         listObject.enqueue(new Callback<ObjectWFM>() {
             @Override
@@ -49,34 +53,9 @@ public class RetrofitWFM implements Runnable {
                 ObjectWFM objectWFM = response.body();
                 mItems = new ArrayList<>();
                 for (ObjectWFM.Payload.WFItems object:objectWFM.getPayload().getItems()) {
-                    Items item = new Items(object.getThumb(), object.getItem_name());
+                    Items item = new Items(object.getItem_name(), object.getThumb());
                     item.setUrlWFM(object.getUrl_name());
                     mItems.add(item);
-                }
-                for (int i=0; i<mItems.size(); i++) {
-                    Call<DucatsWFM> ducatsWFMCall = wfMaApi.getDucats(mItems.get(i).getUrlWFM());
-                    final int finalI = i;
-                    ducatsWFMCall.enqueue(new Callback<DucatsWFM>() {
-                        @Override
-                        public void onResponse(Call<DucatsWFM> call, retrofit2.Response<DucatsWFM> response) {
-                            if(!response.isSuccessful()){
-                                Log.d(TAG, "onResponse: code: "+response.code());
-                            }
-                            DucatsWFM ducatsWFM = response.body();
-                            String id = ducatsWFM.getPayload().getItem().getId();
-                            for (DucatsWFM.Payload.Item.ItemInSet item:ducatsWFM.getPayload().getItem().getItems_in_set()) {
-                                if(item.getId().equals(id)){
-                                    mItems.get(finalI).setDucat(item.getDucats());
-                                    break;
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<DucatsWFM> call, Throwable t) {
-                            Log.d(TAG, "onFailure: "+t.getMessage());
-                        }
-                    });
                 }
                 checkDatabase();
             }
@@ -89,7 +68,6 @@ public class RetrofitWFM implements Runnable {
     }
 
     private void checkDatabase(){
-        livedata = repository.getCatalog("");
         observerDatabase = new Observer<List<Items>>() {
             @Override
             public void onChanged(List<Items> items) {
@@ -100,7 +78,10 @@ public class RetrofitWFM implements Runnable {
     }
 
     private void updateDatabase(List<Items> items){
+        livedata.removeObserver(observerDatabase);
+        repository.setLoadingSize(mItems.size());
         for (Items object:mItems) {
+            repository.setLoadingProgress(mItems.indexOf(object));
             Items found = null;
             for (Items i :items) {
                 if(i.getName().equals(object.getName())){
@@ -109,17 +90,65 @@ public class RetrofitWFM implements Runnable {
                 }
             }
             if(found != null){
-                //update?
+                object.setId(found.getId());
+                repository.updateItem(object);
             }else {
                 repository.insertItem(object);
             }
         }
-        livedata.removeObserver(observerDatabase);
-        checkPrice();
+        checkDucats();
+    }
+
+    private void checkDucats(){
+        observerDucats = new Observer<List<Items>>() {
+            @Override
+            public void onChanged(List<Items> items) {
+                updateDucats(items);
+            }
+        };
+        livedata.observeForever(observerDucats);
+    }
+
+    private void updateDucats(List<Items> items){
+        mItems = (ArrayList<Items>) items;
+        repository.setLoadingSize(mItems.size());
+        livedata.removeObserver(observerDucats);
+        for (int i=0; i<mItems.size(); i++) {
+            Call<DucatsWFM> ducatsWFMCall = wfMaApi.getDucats(mItems.get(i).getUrlWFM());
+            final int finalI = i;
+            ducatsWFMCall.enqueue(new Callback<DucatsWFM>() {
+                @Override
+                public void onResponse(Call<DucatsWFM> call, retrofit2.Response<DucatsWFM> response) {
+                    if(!response.isSuccessful()){
+                        Log.d(TAG, "onResponse: code: "+response.code());
+                    }
+                    DucatsWFM ducatsWFM = response.body();
+                    repository.setLoadingProgress(finalI);
+                    String id = ducatsWFM.getPayload().getItem().getId();
+                    for (DucatsWFM.Payload.Item.ItemInSet item:ducatsWFM.getPayload().getItem().getItems_in_set()) {
+                        if(item.getId().equals(id)){
+                            mItems.get(finalI).setDucat(item.getDucats());
+                            if(item.getDucats()>0) {
+                                Log.d(TAG, mItems.get(finalI).getName()+"ducat site: " + item.getDucats() + " ducat stored: " + mItems.get(finalI).getDucat());
+                            }
+                            repository.updateItem(mItems.get(finalI));
+                            break;
+                        }
+                    }
+                    if(finalI == mItems.size()-1){
+                        checkPrice();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<DucatsWFM> call, Throwable t) {
+                    Log.d(TAG, "onFailure: "+t.getMessage());
+                }
+            });
+        }
     }
 
     private void checkPrice(){
-        livedata = repository.getCatalog("");
         observerPrice = new Observer<List<Items>>() {
             @Override
             public void onChanged(List<Items> items) {
@@ -130,8 +159,9 @@ public class RetrofitWFM implements Runnable {
     }
 
     private void updatePrice(List<Items> items){
-        WfMaApi wfMaApi = retrofit.create(WfMaApi.class);
+        livedata.removeObserver(observerPrice);
         mItems = (ArrayList<Items>) items;
+        repository.setLoadingSize(mItems.size());
         for (int i=0; i < mItems.size(); i++) {
             if(mItems.get(i).getUrlWFM()==null){
                 mItems.get(i).setUrlWFM(mItems.get(i).getName().toLowerCase().replace(" ","_"));
@@ -146,6 +176,7 @@ public class RetrofitWFM implements Runnable {
                         return;
                     }
                     PlatinumWFM platinumWFM = response.body();
+                    repository.setLoadingProgress(finalI);
                     List<PlatinumWFM.Payload.StatClose.Orders> orders = platinumWFM.getPayload().getStatistics_closed().getOrders();
                     if (orders.isEmpty()) return;
                     mItems.get(finalI).setPlat(orders.get(orders.size() - 1).getMin_price());
@@ -159,6 +190,5 @@ public class RetrofitWFM implements Runnable {
                 }
             });
         }
-        livedata.removeObserver(observerPrice);
     }
 }

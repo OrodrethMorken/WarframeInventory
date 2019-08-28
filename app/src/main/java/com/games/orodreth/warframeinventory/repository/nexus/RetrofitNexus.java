@@ -22,7 +22,7 @@ public class RetrofitNexus implements Runnable {
     private Retrofit retrofit;
     private ArrayList<Items> itemsArrayList;
     private Repository repository;
-    private String search = "";
+    private String search = "%%";
     private Observer<List<Items>> observer;
     private LiveData<List<Items>> liveData;
 
@@ -94,6 +94,7 @@ public class RetrofitNexus implements Runnable {
             }
         };
         liveData = repository.getCatalog(search);
+
         liveData.observeForever(observer);
     }
 

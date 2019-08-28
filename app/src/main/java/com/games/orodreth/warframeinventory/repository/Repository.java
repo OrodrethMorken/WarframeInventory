@@ -4,6 +4,7 @@ import android.app.Application;
 import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.games.orodreth.warframeinventory.repository.database.Database;
 import com.games.orodreth.warframeinventory.repository.database.Inventory;
@@ -23,6 +24,8 @@ public class Repository {
     private InventoryDao inventoryDao;
     private Application application;
 
+    private MutableLiveData<Integer> loadingProgress;
+    private MutableLiveData<Integer> loadingMax;
     private LiveData<List<Inventory>> inventory;
 
     public static synchronized Repository getInstance(){
@@ -33,7 +36,10 @@ public class Repository {
     }
 
     private Repository (){
-
+        loadingProgress = new MutableLiveData<>();
+        loadingProgress.setValue(0);
+        loadingMax = new MutableLiveData<>();
+        loadingMax.setValue(0);
     }
 
     public boolean hasApplication(){
@@ -79,6 +85,22 @@ public class Repository {
         protected Integer doInBackground(String... strings) {
             return itemsDao.getCount();
         }
+    }
+
+    public LiveData<Integer> getLoadingProgress(){
+        return loadingProgress;
+    }
+
+    public LiveData<Integer> getLoadingMax(){
+        return loadingMax;
+    }
+
+    public void setLoadingProgress (int progress) {
+        loadingProgress.setValue(progress);
+    }
+
+    public void setLoadingSize (int size) {
+        loadingMax.setValue(size);
     }
 
     //Items Operation

@@ -41,6 +41,14 @@ public class MainActivityViewModel extends AndroidViewModel {
         return repository.getCount();
     }
 
+    public LiveData<Integer> getLoadingProgress(){
+        return repository.getLoadingProgress();
+    }
+
+    public LiveData<Integer> getLoadingMax(){
+        return repository.getLoadingMax();
+    }
+
     public void deleteAll(){
         repository.deleteAllItems();
     }
