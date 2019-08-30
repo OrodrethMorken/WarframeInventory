@@ -9,8 +9,10 @@ import android.os.Handler;
 
 import androidx.annotation.NonNull;
 
+import com.games.orodreth.warframeinventory.repository.Repository;
 import com.games.orodreth.warframeinventory.repository.database.Inventory;
 import com.games.orodreth.warframeinventory.repository.database.Items;
+import com.games.orodreth.warframeinventory.repository.database.ItemsAndInventory;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -151,13 +153,13 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         loadData();
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new Adapter(this, new ArrayList<Items>());
+        mAdapter = new Adapter(this, new ArrayList<ItemsAndInventory>());
         mRecyclerView.setAdapter(mAdapter);
 
         viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
-        viewModel.getCatalog("%%").observe(this, new Observer<List<Items>>() {
+        viewModel.getCatalog("", Repository.fields[0], true).observe(this, new Observer<List<ItemsAndInventory>>() {
             @Override
-            public void onChanged(List<Items> items) {
+            public void onChanged(List<ItemsAndInventory> items) {
                 mAdapter.setItemList(items);
                 mAdapter.notifyDataSetChanged();
             }
@@ -172,9 +174,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
             @Override
             public boolean onQueryTextChange(String newText) {
                 String search = "%"+newText+"%";
-                viewModel.getCatalog(search).observe(MainActivity.this, new Observer<List<Items>>() {
+                viewModel.getCatalog(search, Repository.fields[0], true).observe(MainActivity.this, new Observer<List<ItemsAndInventory>>() {
                     @Override
-                    public void onChanged(List<Items> items) {
+                    public void onChanged(List<ItemsAndInventory> items) {
                         mAdapter.setItemList(items);
                         mAdapter.notifyDataSetChanged();
                     }
@@ -410,6 +412,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                     item.setTitle(getResources().getString(R.string.inventory));
                     item.setIcon(R.drawable.ic_inventory);
                 }
+                viewModel.updatePlatinum();
                 break;
             case R.id.nav_update:
                 creditCounter = 0;

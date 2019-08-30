@@ -10,6 +10,7 @@ import androidx.lifecycle.LiveData;
 import com.games.orodreth.warframeinventory.repository.Repository;
 import com.games.orodreth.warframeinventory.repository.database.Inventory;
 import com.games.orodreth.warframeinventory.repository.database.Items;
+import com.games.orodreth.warframeinventory.repository.database.ItemsAndInventory;
 
 import java.util.List;
 
@@ -49,7 +50,15 @@ public class MainActivityViewModel extends AndroidViewModel {
         return repository.getLoadingMax();
     }
 
+    public void updatePlatinum(){
+        repository.updatePlatinum();
+    }
+
     public void deleteAll(){
         repository.deleteAllItems();
+    }
+
+    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String field, boolean direction) {
+        return repository.getCatalog(search, field, direction);
     }
 }

@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.games.orodreth.warframeinventory.repository.database.Items;
+import com.games.orodreth.warframeinventory.repository.database.ItemsAndInventory;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
     public static final int REMOVE_ONE = 777;
     public static final int REMOVE_ALL = 888;
     private Context mContext;
-    private ArrayList<Items> mItems;
+    private ArrayList<ItemsAndInventory> mItems;
     private OnItemClickListener mListener;
     private int imageSource;
 
@@ -35,9 +36,9 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
         mListener = listener;
     }
 
-    public Adapter(Context context, List<Items> items){
+    public Adapter(Context context, List<ItemsAndInventory> items){
         mContext = context;
-        mItems = (ArrayList<Items>)items;
+        mItems = (ArrayList<ItemsAndInventory>)items;
         imageSource = 0;
     }
 
@@ -54,15 +55,15 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        Items currentItem = mItems.get(position);
+        ItemsAndInventory currentItem = mItems.get(position);
         String imageUrl;
-        if (imageSource==0) imageUrl = "https://cdn.warframestat.us/img/" + currentItem.getImageUrl();
-        else imageUrl = "https://warframe.market/static/assets/" + currentItem.getImageUrl();
+        if (imageSource==0) imageUrl = "https://cdn.warframestat.us/img/" + currentItem.items.getImageUrl();
+        else imageUrl = "https://warframe.market/static/assets/" + currentItem.items.getImageUrl();
         //String imageUrl = currentItem.getImageUrl();
-        String itemName = currentItem.getName();
-        int itemDucats = currentItem.getDucat();
-        int itemPlats = currentItem.getPlat();
-        double itemDucPlat = currentItem.getDucPlat();
+        String itemName = currentItem.items.getName();
+        int itemDucats = currentItem.items.getDucat();
+        int itemPlats = currentItem.items.getPlat();
+        double itemDucPlat = currentItem.items.getDucPlat();
 
         holder.mTextViewItem.setText(itemName);
         holder.mTextViewDucats.setText(String.format(Locale.getDefault(),"%s%d", mContext.getResources().getString(R.string.ducats), itemDucats));
@@ -77,9 +78,13 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
         return mItems.size();
     }
 
-    public void setItemList(List<Items> items){
+    /*public void setItemList(List<Items> items){
         mItems = (ArrayList<Items>) items;
         notifyDataSetChanged();
+    }*/
+
+    public void setItemList(List<ItemsAndInventory> itemsAndInventories){
+        mItems = (ArrayList<ItemsAndInventory>) itemsAndInventories;
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
@@ -115,11 +120,10 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
 
         @Override
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            menu.setHeaderTitle(mItems.get(getAdapterPosition()).getName());
+            menu.setHeaderTitle(mItems.get(getAdapterPosition()).items.getName());
             menu.add(getAdapterPosition(),ADD_ONE, 0, "add 1");
             menu.add(getAdapterPosition(),REMOVE_ONE, 0, "remove 1");
             menu.add(getAdapterPosition(),REMOVE_ALL, 0, "remove all");
-
         }
     }
 }

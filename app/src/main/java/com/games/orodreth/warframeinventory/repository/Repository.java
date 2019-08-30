@@ -10,16 +10,19 @@ import com.games.orodreth.warframeinventory.repository.database.Database;
 import com.games.orodreth.warframeinventory.repository.database.Inventory;
 import com.games.orodreth.warframeinventory.repository.database.InventoryDao;
 import com.games.orodreth.warframeinventory.repository.database.Items;
+import com.games.orodreth.warframeinventory.repository.database.ItemsAndInventory;
 import com.games.orodreth.warframeinventory.repository.database.ItemsDao;
 import com.games.orodreth.warframeinventory.repository.nexus.RetrofitNexus;
+import com.games.orodreth.warframeinventory.repository.nexus.RetrofitPlatinumNexus;
+import com.games.orodreth.warframeinventory.repository.warframeMarket.RetrofitPlatinumWFM;
 import com.games.orodreth.warframeinventory.repository.warframeMarket.RetrofitWFM;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class Repository {
-
     private static Repository instance;
+
     private ItemsDao itemsDao;
     private InventoryDao inventoryDao;
     private Application application;
@@ -27,6 +30,8 @@ public class Repository {
     private MutableLiveData<Integer> loadingProgress;
     private MutableLiveData<Integer> loadingMax;
     private LiveData<List<Inventory>> inventory;
+
+    public static String fields[] = {"name", "ducat", "ducPlat", "plat", "platAvg"};
 
     public static synchronized Repository getInstance(){
         if(instance == null){
@@ -55,6 +60,10 @@ public class Repository {
 
     public LiveData<List<Items>> getCatalog(String search) {
         return itemsDao.getItems(search);
+    }
+
+    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String fields, boolean direction){
+        return itemsDao.getItems(search, fields, direction);
     }
 
     public LiveData<List<Inventory>> getInventory(){
@@ -122,8 +131,8 @@ public class Repository {
     }
 
     public void getCatalogRetrofit() {
-        //getCatalogWFM();
-        getCatalogNexus();
+        getCatalogWFM();
+//        getCatalogNexus();
     }
 
     public void getCatalogNexus(){
@@ -132,6 +141,18 @@ public class Repository {
 
     public void getCatalogWFM(){
         new Thread(new RetrofitWFM()).start();
+    }
+
+    public void updatePlatinum() {
+        platinumWFM();
+    }
+
+    public void platinumWFM(){
+        new RetrofitPlatinumWFM().start();
+    }
+
+    public void platinumNexus(){
+        new RetrofitPlatinumNexus().start();
     }
 
     private static class InsertItemAsync extends AsyncTask<Items, Void, Void>{

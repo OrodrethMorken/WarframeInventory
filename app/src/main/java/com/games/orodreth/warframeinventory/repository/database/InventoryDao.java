@@ -27,6 +27,6 @@ public interface InventoryDao {
     @Query("SELECT * FROM inventory_table")
     LiveData<List<Inventory>> getInventory();
 
-    @Query("SELECT COUNT(id) FROM inventory_table")
+    @Query("SELECT COUNT(item_id) FROM inventory_table")
     int getCount();
 }

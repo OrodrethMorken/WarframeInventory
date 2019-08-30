@@ -9,27 +9,25 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "inventory_table")
 public class Inventory{
 
-    @PrimaryKey (autoGenerate = true)
-    private int id;
-
-    private String name;
+    @PrimaryKey (autoGenerate = false)
+    private int item_id;
     private int quantity;
 
-    public Inventory(String name, int quantity) {
-        this.name = name;
+    public Inventory(int item_id, int quantity) {
+        this.item_id = item_id;
         this.quantity = quantity;
     }
 
-    public String getName() {
+    /*public String getName() {
         return name;
+    }*/
+
+    public int getItem_id() {
+        return item_id;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
+    public void setItem_id(int item_id) {
+        this.item_id = item_id;
     }
 
     public int getQuantity() {

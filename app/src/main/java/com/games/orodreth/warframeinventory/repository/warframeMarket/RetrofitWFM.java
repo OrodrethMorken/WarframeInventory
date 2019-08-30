@@ -154,6 +154,6 @@ public class RetrofitWFM implements Runnable {
     }
 
     private void checkPrice(){
-        new Thread(new RetrofitPlatinumWFM()).start();
+        new RetrofitPlatinumWFM().start();
     }
 }

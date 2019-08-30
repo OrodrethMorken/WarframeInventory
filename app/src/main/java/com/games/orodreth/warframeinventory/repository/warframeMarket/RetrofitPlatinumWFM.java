@@ -17,21 +17,21 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class RetrofitPlatinumWFM implements Runnable {
+public class RetrofitPlatinumWFM extends Thread {
 
-    private Retrofit retrofit;
     private Repository repository;
     private LiveData<List<Items>> livedata;
     private WfMaApi wfMaApi;
     private Observer<List<Items>> observerPrice;
     private ArrayList<Items> mItems;
+    private Handler handler = new Handler();
 
     private static final String TAG = "RetrofitPlatinumWFM";
 
     @Override
     public void run() {
 
-        retrofit = new Retrofit.Builder()
+        Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.warframe.market/v1/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -44,7 +44,6 @@ public class RetrofitPlatinumWFM implements Runnable {
                 updatePrice(items);
             }
         };
-        Handler handler = new Handler();
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -80,6 +79,7 @@ public class RetrofitPlatinumWFM implements Runnable {
                     mItems.get(finalI).setPlatAvg((int) orders.get(orders.size() - 1).getMedian());
                     repository.updateItem(mItems.get(finalI));
                     if(finalI==mItems.size()-1){
+                        repository.setLoadingProgress(0);
                         Log.d(TAG, "onResponse plat: end");
                     }
                 }

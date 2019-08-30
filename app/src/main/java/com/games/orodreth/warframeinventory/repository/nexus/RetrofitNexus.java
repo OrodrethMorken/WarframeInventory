@@ -7,6 +7,7 @@ import androidx.lifecycle.Observer;
 
 import com.games.orodreth.warframeinventory.repository.Repository;
 import com.games.orodreth.warframeinventory.repository.database.Items;
+import com.games.orodreth.warframeinventory.repository.warframeMarket.RetrofitPlatinumWFM;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,9 @@ public class RetrofitNexus implements Runnable {
                 }
 
                 List<ObjectWfcd> items = response.body();
+                repository.setLoadingSize(items.size());
                 for (ObjectWfcd object : items) {
+                    repository.setLoadingProgress(items.indexOf(object));
                     if (object.getComponents() != null && !object.getCategory().equals("Misc")) {
                         String name = object.getName();
                         for (ObjectWfcd i :object.getComponents()) {
@@ -126,59 +129,6 @@ public class RetrofitNexus implements Runnable {
             }
         }
         Log.d(TAG, "onChanged: finished updating database");
-        updatePrice(itemsArrayList);
-    }
-
-    private void updatePrice(List<Items> catalog) {
-        itemsArrayList = (ArrayList<Items>) catalog;
-        NexusApi nexusApi = retrofit.create(NexusApi.class);
-        Call<List<ObjectNexus>> listPrice = nexusApi.getPrices();
-        listPrice.enqueue(new Callback<List<ObjectNexus>>() {
-            @Override
-            public void onResponse(Call<List<ObjectNexus>> call, retrofit2.Response<List<ObjectNexus>> response) {
-                if (!response.isSuccessful()) {
-                    Log.d(TAG, "onResponse: code: " + response.code());
-                    return;
-                }
-
-                List<ObjectNexus> prices = response.body();
-                for (ObjectNexus object : prices) {
-                    if (object.getComponents() != null) {
-                        String name = object.getName();
-                        for (ObjectNexus component : object.getComponents()) {
-                            for (Items item : itemsArrayList) {
-                                String fullname = name + " " +component.getName();
-                                if (fullname.equals(item.getName())) {
-                                    try {
-                                        item.setPlat(component.getPrices().getSelling().getCurrent().getMin());
-                                        item.setPlatAvg(component.getPrices().getSelling().getCurrent().getMedian());
-                                        Log.d(TAG, "onResponse: id " + item.getId());
-                                        repository.updateItem(item);
-                                    }catch (NullPointerException e){
-                                        Log.e(TAG, "NullPointer: "+fullname, e);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        for (Items item : itemsArrayList) {
-                            if (object.getName().equals(item.getName())) {
-                                item.setPlat(object.getPrices().getSelling().getCurrent().getMin());
-                                item.setPlatAvg(object.getPrices().getSelling().getCurrent().getMedian());
-                                repository.updateItem(item);
-                                break;
-                            }
-                        }
-                    }
-                }
-                Log.d(TAG, "onResponse: finished updating price");
-            }
-
-            @Override
-            public void onFailure(Call<List<ObjectNexus>> call, Throwable t) {
-
-            }
-        });
+        new RetrofitPlatinumNexus().start();
     }
 }
