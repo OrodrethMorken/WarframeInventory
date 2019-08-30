@@ -396,6 +396,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                     searchToggle = true;
                     mSearch.setVisibility(View.VISIBLE);
                     keyboard();
+                    viewModel.deleteAll(); //todo remove this line
                 }
                 break;
             case R.id.nav_inventory:

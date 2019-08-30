@@ -122,7 +122,8 @@ public class Repository {
     }
 
     public void getCatalogRetrofit() {
-        getCatalogWFM();
+        //getCatalogWFM();
+        getCatalogNexus();
     }
 
     public void getCatalogNexus(){

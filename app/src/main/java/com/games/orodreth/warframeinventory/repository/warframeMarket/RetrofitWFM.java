@@ -24,7 +24,6 @@ public class RetrofitWFM implements Runnable {
     private Repository repository;
     private LiveData<List<Items>> livedata;
     private Observer<List<Items>> observerDatabase;
-    private Observer<List<Items>> observerPrice;
     private Observer<List<Items>> observerDucats;
     private WfMaApi wfMaApi;
 
@@ -41,7 +40,7 @@ public class RetrofitWFM implements Runnable {
     }
 
     private void buildDatabase(){
-        repository.deleteAllItems();
+        //repository.deleteAllItems();
         Call<ObjectWFM> listObject = wfMaApi.getItems();
         listObject.enqueue(new Callback<ObjectWFM>() {
             @Override
@@ -79,6 +78,7 @@ public class RetrofitWFM implements Runnable {
 
     private void updateDatabase(List<Items> items){
         livedata.removeObserver(observerDatabase);
+        Log.d(TAG, "updateDatabase: start");
         repository.setLoadingSize(mItems.size());
         for (Items object:mItems) {
             repository.setLoadingProgress(mItems.indexOf(object));
@@ -96,6 +96,7 @@ public class RetrofitWFM implements Runnable {
                 repository.insertItem(object);
             }
         }
+        Log.d(TAG, "updateDatabase: end");
         checkDucats();
     }
 
@@ -111,9 +112,11 @@ public class RetrofitWFM implements Runnable {
 
     private void updateDucats(List<Items> items){
         mItems = (ArrayList<Items>) items;
+        Log.d(TAG, "updateDucats: start");
         repository.setLoadingSize(mItems.size());
         livedata.removeObserver(observerDucats);
         for (int i=0; i<mItems.size(); i++) {
+            WfMaApi wfMaApi = retrofit.create(WfMaApi.class);
             Call<DucatsWFM> ducatsWFMCall = wfMaApi.getDucats(mItems.get(i).getUrlWFM());
             final int finalI = i;
             ducatsWFMCall.enqueue(new Callback<DucatsWFM>() {
@@ -124,6 +127,7 @@ public class RetrofitWFM implements Runnable {
                     }
                     DucatsWFM ducatsWFM = response.body();
                     repository.setLoadingProgress(finalI);
+                    Log.d(TAG, "Item :"+mItems.get(finalI).getName()+" i: "+finalI);
                     String id = ducatsWFM.getPayload().getItem().getId();
                     for (DucatsWFM.Payload.Item.ItemInSet item:ducatsWFM.getPayload().getItem().getItems_in_set()) {
                         if(item.getId().equals(id)){
@@ -136,6 +140,7 @@ public class RetrofitWFM implements Runnable {
                         }
                     }
                     if(finalI == mItems.size()-1){
+                        Log.d(TAG, "onResponse ducats: end");
                         checkPrice();
                     }
                 }
@@ -149,46 +154,6 @@ public class RetrofitWFM implements Runnable {
     }
 
     private void checkPrice(){
-        observerPrice = new Observer<List<Items>>() {
-            @Override
-            public void onChanged(List<Items> items) {
-                updatePrice(items);
-            }
-        };
-        livedata.observeForever(observerPrice);
-    }
-
-    private void updatePrice(List<Items> items){
-        livedata.removeObserver(observerPrice);
-        mItems = (ArrayList<Items>) items;
-        repository.setLoadingSize(mItems.size());
-        for (int i=0; i < mItems.size(); i++) {
-            if(mItems.get(i).getUrlWFM()==null){
-                mItems.get(i).setUrlWFM(mItems.get(i).getName().toLowerCase().replace(" ","_"));
-            }
-            Call<PlatinumWFM> platinumWFMCall = wfMaApi.getstatistics(mItems.get(i).getUrlWFM());
-            final int finalI = i;
-            platinumWFMCall.enqueue(new Callback<PlatinumWFM>() {
-                @Override
-                public void onResponse(Call<PlatinumWFM> call, retrofit2.Response<PlatinumWFM> response) {
-                    if (!response.isSuccessful()) {
-                        Log.d(TAG, "onResponse: code: " + response.code());
-                        return;
-                    }
-                    PlatinumWFM platinumWFM = response.body();
-                    repository.setLoadingProgress(finalI);
-                    List<PlatinumWFM.Payload.StatClose.Orders> orders = platinumWFM.getPayload().getStatistics_closed().getOrders();
-                    if (orders.isEmpty()) return;
-                    mItems.get(finalI).setPlat(orders.get(orders.size() - 1).getMin_price());
-                    mItems.get(finalI).setPlatAvg((int) orders.get(orders.size() - 1).getMedian());
-                    repository.updateItem(mItems.get(finalI));
-                }
-
-                @Override
-                public void onFailure(Call<PlatinumWFM> call, Throwable t) {
-                    Log.d(TAG, "onFailure: " + t.getMessage());
-                }
-            });
-        }
+        new Thread(new RetrofitPlatinumWFM()).start();
     }
 }

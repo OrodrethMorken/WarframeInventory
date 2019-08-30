@@ -52,9 +52,8 @@ public class RetrofitNexus implements Runnable {
                 for (ObjectWfcd object : items) {
                     if (object.getComponents() != null && !object.getCategory().equals("Misc")) {
                         String name = object.getName();
-                        for (ObjectWfcd i :
-                                object.getComponents()) {
-                            if(i.isTradable()) {
+                        for (ObjectWfcd i :object.getComponents()) {
+                            if(i.isTradable() && i.getType() == null) {
                                 String fullname = name + " " + i.getName();
                                 Items item = new Items(fullname, i.getImageName());
                                 item.setCategory(i.getCategory());
@@ -64,7 +63,8 @@ public class RetrofitNexus implements Runnable {
                             }
                         }
                     } else {
-                        if(object.isTradable()) {
+                        if(object.isTradable() &&
+                                !(object.getCategory().equals("Quests") || object.getCategory().equals("Gear") || object.getCategory().equals("Fish") )) {
                             Items item = new Items(object.getName(), object.getImageName());
                             item.setCategory(object.getCategory());
                             item.setTradable(object.isTradable());
@@ -102,13 +102,10 @@ public class RetrofitNexus implements Runnable {
         liveData.removeObserver(observer);
         for (Items i :itemsArrayList) {
             boolean found = false;
-            for (Items j :
-                    items) {
+            for (Items j : items) {
                 if (i.getName().equals(j.getName())) {
                     found = true;
-                    j.setCategory(j.getCategory());
-                    j.setTradable(j.isTradable());
-                    j.setDucat(j.getDucat());
+                    i.setId(j.getId());
                     repository.updateItem(j);
                     break;
                 }
@@ -118,8 +115,7 @@ public class RetrofitNexus implements Runnable {
             }
         }for (Items i :items) {
             boolean found = false;
-            for (Items j :
-                    itemsArrayList) {
+            for (Items j : itemsArrayList) {
                 if (i.getName().equals(j.getName())){
                     found = true;
                     break;
@@ -146,15 +142,11 @@ public class RetrofitNexus implements Runnable {
                 }
 
                 List<ObjectNexus> prices = response.body();
-                for (ObjectNexus object :
-                        prices) {
+                for (ObjectNexus object : prices) {
                     if (object.getComponents() != null) {
                         String name = object.getName();
-                        for (ObjectNexus component :
-                                object.getComponents()) {
-
-                            for (Items item :
-                                    itemsArrayList) {
+                        for (ObjectNexus component : object.getComponents()) {
+                            for (Items item : itemsArrayList) {
                                 String fullname = name + " " +component.getName();
                                 if (fullname.equals(item.getName())) {
                                     try {
@@ -170,8 +162,7 @@ public class RetrofitNexus implements Runnable {
                             }
                         }
                     } else {
-                        for (Items item :
-                                itemsArrayList) {
+                        for (Items item : itemsArrayList) {
                             if (object.getName().equals(item.getName())) {
                                 item.setPlat(object.getPrices().getSelling().getCurrent().getMin());
                                 item.setPlatAvg(object.getPrices().getSelling().getCurrent().getMedian());

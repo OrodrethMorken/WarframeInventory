@@ -12,6 +12,7 @@ public class ObjectWfcd {
     private int itemCount;
     private String imageName;
     private int ducats;
+    private String type;
 
     public String getName() {
         return name;
@@ -43,5 +44,9 @@ public class ObjectWfcd {
 
     public int getDucats() {
         return ducats;
+    }
+
+    public String getType() {
+        return type;
     }
 }
