@@ -2,6 +2,8 @@ package com.games.orodreth.warframeinventory.repository;
 
 import android.app.Application;
 import android.os.AsyncTask;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -64,6 +66,10 @@ public class Repository {
 
     public LiveData<List<ItemsAndInventory>> getCatalog(String search, String fields, boolean direction){
         return itemsDao.getItems(search, fields, direction);
+    }
+
+    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String fields, boolean direction){
+        return itemsDao.getItems(search, category, fields, direction);
     }
 
     public LiveData<List<Inventory>> getInventory(){
@@ -131,8 +137,9 @@ public class Repository {
     }
 
     public void getCatalogRetrofit() {
-        getCatalogWFM();
-//        getCatalogNexus();
+//        getCatalogWFM();
+        getCategory();
+        getCatalogNexus();
     }
 
     public void getCatalogNexus(){
@@ -153,6 +160,32 @@ public class Repository {
 
     public void platinumNexus(){
         new RetrofitPlatinumNexus().start();
+    }
+
+    public void getCategory(){
+        AsyncTask<Void, Void, List<String>> async = new GetCategoryAsync(itemsDao).execute();
+        try {
+            List<String> category = async.get();
+            Toast.makeText(application, "category", Toast.LENGTH_SHORT).show();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class GetCategoryAsync extends AsyncTask<Void, Void, List<String>>{
+
+        private ItemsDao itemsDao;
+
+        public GetCategoryAsync(ItemsDao itemsDao){
+            this.itemsDao = itemsDao;
+        }
+
+        @Override
+        protected List<String> doInBackground(Void... voids) {
+            return itemsDao.getCategory();
+        }
     }
 
     private static class InsertItemAsync extends AsyncTask<Items, Void, Void>{
@@ -218,18 +251,78 @@ public class Repository {
     //Inventory Operation
 
     public void insertInventory (Inventory inventory){
-        inventoryDao.insert(inventory);
+        new InsertInventoryAsync(inventoryDao).execute(inventory);
     }
 
     public void updateInventory (Inventory inventory){
-        inventoryDao.update(inventory);
+        new UpdateInventoryAsync(inventoryDao).execute(inventory);
     }
 
     public void deleteInventory (Inventory inventory){
-        inventoryDao.delete(inventory);
+        new DeleteInventoryAsync(inventoryDao).execute(inventory);
     }
 
     public void deleteAllInventory() {
-        inventoryDao.deleteAll();
+        new DeleteAllInventoryAsync(inventoryDao).execute();
+    }
+
+    private static class InsertInventoryAsync extends AsyncTask<Inventory, Void, Void>{
+
+        private InventoryDao inventoryDao;
+
+        public InsertInventoryAsync(InventoryDao inventoryDao){
+            this.inventoryDao = inventoryDao;
+        }
+
+        @Override
+        protected Void doInBackground(Inventory... inventories) {
+            inventoryDao.insert(inventories[0]);
+            return null;
+        }
+    }
+
+    private static class UpdateInventoryAsync extends AsyncTask<Inventory, Void, Void>{
+
+        private InventoryDao inventoryDao;
+
+        public UpdateInventoryAsync(InventoryDao inventoryDao){
+            this.inventoryDao = inventoryDao;
+        }
+
+        @Override
+        protected Void doInBackground(Inventory... inventories) {
+            inventoryDao.update(inventories[0]);
+            return null;
+        }
+    }
+
+    private static class DeleteInventoryAsync extends AsyncTask<Inventory, Void, Void>{
+
+        private InventoryDao inventoryDao;
+
+        public DeleteInventoryAsync(InventoryDao inventoryDao){
+            this.inventoryDao = inventoryDao;
+        }
+
+        @Override
+        protected Void doInBackground(Inventory... inventories) {
+            inventoryDao.delete(inventories[0]);
+            return null;
+        }
+    }
+
+    private static class DeleteAllInventoryAsync extends AsyncTask<Void, Void, Void>{
+
+        private InventoryDao inventoryDao;
+
+        public DeleteAllInventoryAsync(InventoryDao inventoryDao){
+            this.inventoryDao = inventoryDao;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            inventoryDao.deleteAll();
+            return null;
+        }
     }
 }

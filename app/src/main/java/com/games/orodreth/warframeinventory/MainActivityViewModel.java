@@ -26,20 +26,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         }
     }
 
-    public LiveData<List<Items>> getCatalog(String search){
-        return repository.getCatalog(search);
-    }
-
-    public LiveData<List<Inventory>> getInventory(){
-        return repository.getInventory();
-    }
-
     public void getCatalogRetrofit(){
         repository.getCatalogRetrofit();
-    }
-
-    public int getCount(){
-        return repository.getCount();
     }
 
     public LiveData<Integer> getLoadingProgress(){
@@ -60,5 +48,17 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public LiveData<List<ItemsAndInventory>> getCatalog(String search, String field, boolean direction) {
         return repository.getCatalog(search, field, direction);
+    }
+
+    public void insertInventory(Inventory inventory){
+        repository.insertInventory(inventory);
+    }
+
+    public void updateInventory(Inventory inventory){
+        repository.updateInventory(inventory);
+    }
+
+    public void deleteInventory(Inventory inventory){
+        repository.deleteInventory(inventory);
     }
 }

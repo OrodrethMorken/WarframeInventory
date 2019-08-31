@@ -69,8 +69,17 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
         holder.mTextViewDucats.setText(String.format(Locale.getDefault(),"%s%d", mContext.getResources().getString(R.string.ducats), itemDucats));
         holder.mTextViewPlats.setText(String.format(Locale.getDefault(),"%s%d", mContext.getResources().getString(R.string.platinum), itemPlats));
         holder.mTextViewDucPlat.setText(String.format(Locale.getDefault(),"%s %.2f", mContext.getResources().getString(R.string.duc_plat), itemDucPlat));
-        Picasso.with(mContext).load(imageUrl).fit().centerInside().into(holder.mImageView); //working with picasso 2.5.2
-        //Picasso.get().load(imageUrl).fit().centerInside().into(holder.mImageView);        TODO workaround since with() method is deprecated on future picasso release
+
+        if(currentItem.inventory!=null){
+            if(holder.mTextViewQuantity.getVisibility()==View.GONE){
+                holder.mTextViewQuantity.setVisibility(View.VISIBLE);
+            }
+            int itemQuantity = currentItem.inventory.getQuantity();
+            holder.mTextViewQuantity.setText(String.format(Locale.getDefault(),"%s %d", mContext.getResources().getString(R.string.quantity), itemQuantity));
+        }else {
+            holder.mTextViewQuantity.setVisibility(View.GONE);
+        }
+
     }
 
     @Override
@@ -88,20 +97,20 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
-        public ImageView mImageView;
         public TextView mTextViewItem;
         public TextView mTextViewDucats;
         public TextView mTextViewPlats;
         public TextView mTextViewDucPlat;
+        public TextView mTextViewQuantity;
         public CardView mcardView;
 
         public ItemViewHolder(View itemView) {
             super(itemView);
-            mImageView = itemView.findViewById(R.id.image_view);
             mTextViewItem = itemView.findViewById(R.id.text_view_name);
             mTextViewDucats = itemView.findViewById(R.id.text_view_duc);
             mTextViewPlats = itemView.findViewById(R.id.text_view_plat);
             mTextViewDucPlat = itemView.findViewById(R.id.text_view_duc_plat);
+            mTextViewQuantity = itemView.findViewById(R.id.text_view_quantity);
             mcardView = itemView.findViewById(R.id.cardview);
             mcardView.setOnCreateContextMenuListener(this);
 
@@ -121,9 +130,15 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
         @Override
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
             menu.setHeaderTitle(mItems.get(getAdapterPosition()).items.getName());
-            menu.add(getAdapterPosition(),ADD_ONE, 0, "add 1");
-            menu.add(getAdapterPosition(),REMOVE_ONE, 0, "remove 1");
-            menu.add(getAdapterPosition(),REMOVE_ALL, 0, "remove all");
+            if(mItems.get(getAdapterPosition()).inventory!=null) {
+                menu.add(mItems.get(getAdapterPosition()).items.getId(), ADD_ONE, mItems.get(getAdapterPosition()).inventory.getQuantity(), "add 1");
+                menu.add(mItems.get(getAdapterPosition()).items.getId(), REMOVE_ONE, mItems.get(getAdapterPosition()).inventory.getQuantity(), "remove 1");
+                menu.add(mItems.get(getAdapterPosition()).items.getId(), REMOVE_ALL, mItems.get(getAdapterPosition()).inventory.getQuantity(), "remove all");
+            } else {
+                menu.add(mItems.get(getAdapterPosition()).items.getId(), ADD_ONE, 0, "Add 1");
+                menu.add(mItems.get(getAdapterPosition()).items.getId(), REMOVE_ONE, 0, "remove 1");
+                menu.add(mItems.get(getAdapterPosition()).items.getId(), REMOVE_ALL, 0, "remove all");
+            }
         }
     }
 }

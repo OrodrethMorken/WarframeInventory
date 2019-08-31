@@ -18,20 +18,11 @@
         android:layout_below="@+id/toolbar_main"
         android:max="100" />
 
-    <SearchView
-        android:id="@+id/search_item"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/progressBar"
-        android:inputType="text"
-        android:hint="@string/search"
-        android:visibility="gone" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/search_item"
+        android:layout_below="@+id/progressBar"
         android:background="@android:color/darker_gray">
     </androidx.recyclerview.widget.RecyclerView>
 

@@ -54,9 +54,36 @@ public abstract class ItemsDao {
         return getItemsViaQuery(query);
     }
 
+    public LiveData<List<ItemsAndInventory>> getItems(String search, String category, String field, boolean direction){
+        String text = "SELECT * FROM catalog_table A LEFT JOIN inventory_table B ON A.id = B.item_id";
+        boolean search_found = false;
+        if(search!=null && !search.trim().isEmpty()){
+            text += " WHERE name LIKE \""+search+"\"";
+            search_found = true;
+        }
+        if(category!= null && !category.trim().isEmpty()){
+            if(search_found){
+                text += " AND category LIKE \""+category+"\"";
+            }else {
+                text += " WHERE category LIKE \""+category+"\"";
+            }
+        }
+        text += " ORDER BY "+field;
+        if(direction){
+            text += " ASC";
+        }else {
+            text = " DESC";
+        }
+        SupportSQLiteQuery query = new SimpleSQLiteQuery(text);
+        return getItemsViaQuery(query);
+    }
+
     @Query("SELECT * FROM catalog_table")
     public abstract LiveData<List<Items>> getItems ();
 
     @Query("SELECT COUNT(id) FROM catalog_table")
     public abstract int getCount();
+
+    @Query("SELECT DISTINCT category FROM catalog_table ORDER BY category ASC")
+    public abstract List<String> getCategory();
 }

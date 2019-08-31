@@ -8,6 +8,8 @@ import androidx.lifecycle.Observer;
 
 import com.games.orodreth.warframeinventory.repository.Repository;
 import com.games.orodreth.warframeinventory.repository.database.Items;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +32,13 @@ public class RetrofitPlatinumWFM extends Thread {
 
     @Override
     public void run() {
+        Gson gson = new GsonBuilder().setLenient().create();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.warframe.market/v1/")
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
+        
         repository = Repository.getInstance();
         livedata = repository.getCatalog("%%");
         wfMaApi = retrofit.create(WfMaApi.class);

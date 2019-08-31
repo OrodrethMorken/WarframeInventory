@@ -48,7 +48,7 @@ import static com.games.orodreth.warframeinventory.Adapter.ADD_ONE;
 import static com.games.orodreth.warframeinventory.Adapter.REMOVE_ALL;
 import static com.games.orodreth.warframeinventory.Adapter.REMOVE_ONE;
 
-public class MainActivity extends AppCompatActivity implements Adapter.OnItemClickListener, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements Adapter.OnItemClickListener {
     public static final String EXTRA_URL = "com.games.orodreth.warframeinventory.image_url";
     public static final String EXTRA_NAME = "com.games.orodreth.warframeinventory.item_name";
     public static final String EXTRA_DUCATS = "com.games.orodreth.warframeinventory.ducats";
@@ -97,58 +97,15 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_navigation_drawer);
+        setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
-
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(searchToggle){
-                    searchToggle = false;
-                    mSearch.setVisibility(View.GONE);
-                    keyboard();
-                }else {
-                    searchToggle = true;
-                    mSearch.setVisibility(View.VISIBLE);
-                    keyboard();
-                }
-                Toast.makeText(MainActivity.this, "database count: "+viewModel.getCount(), Toast.LENGTH_SHORT).show();
-                //viewModel.deleteAll();
-            }
-        });
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-        navigationView.setNavigationItemSelectedListener(this);
-        View header = navigationView.getHeaderView(0);
-        ImageView logo = header.findViewById(R.id.logoView);
-        logo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (creditCounter < 7) {
-                    creditCounter++;
-                } else {
-                    creditCounter = 0;
-                    CreditDialog creditDialog = new CreditDialog();
-                    creditDialog.show(getSupportFragmentManager(), Integer.toString(creditCounter));
-                }
-            }
-        });
 
         mProgressBar = findViewById(R.id.progressBar);
         mRecyclerView = findViewById(R.id.recycler_view);
 
-        mSearch = findViewById(R.id.search_item);
-        mSearch.setVisibility(View.GONE);
-        searchToggle = false;
+        mSearch = findViewById(R.id.searchbar);
 
         loadData();
 
@@ -165,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
             }
         });
 
-        mSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        /*mSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 return false;
@@ -183,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 });
                 return true;
             }
-        });
+        });*/
 
         viewModel.getLoadingProgress().observe(this, new Observer<Integer>() {
             @Override
@@ -253,7 +210,31 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        //inflater.inflate(R.menu.menu, menu);
+        inflater.inflate(R.menu.menu, menu);
+
+        mSearch = (SearchView) menu.findItem(R.id.searchbar).getActionView();
+        mSearch.setSubmitButtonEnabled(true);
+
+        mSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                String search = "%"+newText+"%";
+                viewModel.getCatalog(search, Repository.fields[0], true).observe(MainActivity.this, new Observer<List<ItemsAndInventory>>() {
+                    @Override
+                    public void onChanged(List<ItemsAndInventory> items) {
+                        mAdapter.setItemList(items);
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+                return true;
+            }
+        });
+
         return true;
     }
 
@@ -266,25 +247,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        /*switch (item.getItemId()){
-            case R.id.refresh_button:
-                return true;
-            case R.id.update_all:
-                Toast.makeText(this, "Updating all the data", Toast.LENGTH_SHORT).show();
-                if(sourceSelected==0)parseJSON2();
-                else parseJSON();
-                return true;
-            case R.id.update_plat:
-                Toast.makeText(this, "Updating Platinum", Toast.LENGTH_SHORT).show();
-                if(sourceSelected==0)plats2();
-                else plats();
-                return true;
-            case R.id.save_button:
-                Toast.makeText(this,"Saving", Toast.LENGTH_SHORT).show();
-                if(!mInventory.isEmpty()){
-                    mStorage.write(mInventory);
-                }else Toast.makeText(this,"No item in the Inventory", Toast.LENGTH_SHORT).show();
-                return true;
+        switch (item.getItemId()){
             case R.id.search_bar:
                 if(searchToggle){
                     searchToggle = false;
@@ -294,16 +257,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                     searchToggle = true;
                     mSearch.setVisibility(View.VISIBLE);
                 }return true;
-            case R.id.inventory_button:
-                if(focus==ADAPTER_CATALOG){
-                    focus = ADAPTER_STORAGE;
-                    item.setTitle(getResources().getString(R.string.catalog));
-                }else {
-                    focus = ADAPTER_CATALOG;
-                    item.setTitle(getResources().getString(R.string.inventory));
-                }
-                filter(mSearch.getText().toString());
-                return true;
             case R.id.sorting:
                 if(sorting==SORT_AZ){
                     sorting = SORT_DUCPLAT;
@@ -312,28 +265,17 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                     sorting = SORT_AZ;
                     item.setTitle(getResources().getString(R.string.sort_duc_plat));
                 }
-                sort();
-                return true;
-            case R.id.quit_button:
-                Toast.makeText(this, "Closing App", Toast.LENGTH_SHORT).show();
-                if(!mInventory.isEmpty()){
-                    mStorage.write(mInventory);
-                }
-                finish();
                 return true;
             case R.id.nexus:
                 sourceSelected = 0;
                 item.setChecked(true);
-                parseJSON2();
                 return true;
             case R.id.market:
                 sourceSelected = 1;
                 item.setChecked(true);
-                parseJSON();
                 return true;
             default: return super.onOptionsItemSelected(item);
-        }*/
-        return super.onOptionsItemSelected(item);
+        }
     }
 
     /**
@@ -346,131 +288,27 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case ADD_ONE:
-
+                if(item.getOrder()==0){
+                    viewModel.insertInventory(new Inventory(item.getGroupId(), 1));
+                }else {
+                    viewModel.updateInventory(new Inventory(item.getGroupId(), item.getOrder()+1));
+                }
                 return true;
             case REMOVE_ONE:
-
+                if(item.getOrder()>1){
+                    viewModel.updateInventory(new Inventory(item.getGroupId(), item.getOrder()-1));
+                }else if(item.getOrder()==1){
+                    viewModel.deleteInventory(new Inventory(item.getGroupId(), item.getOrder()));
+                }
                 return true;
             case REMOVE_ALL:
-
+                if(item.getOrder()>0){
+                    viewModel.deleteInventory(new Inventory(item.getGroupId(), item.getOrder()));
+                }
                 return true;
             default:
                 return super.onContextItemSelected(item);
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    /**
-     * manage the navigation bar
-     *
-     * @param item the item that was selected
-     * @return true
-     */
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        switch (id) {
-            case R.id.nav_search:
-                creditCounter = 0;
-                if (searchToggle) {
-                    searchToggle = false;
-                    //mSearch.setText("");
-                    mSearch.setVisibility(View.GONE);
-                    keyboard();
-                } else {
-                    searchToggle = true;
-                    mSearch.setVisibility(View.VISIBLE);
-                    keyboard();
-                    viewModel.deleteAll(); //todo remove this line
-                }
-                break;
-            case R.id.nav_inventory:
-                creditCounter = 0;
-                if (focus == ADAPTER_CATALOG) {
-                    focus = ADAPTER_STORAGE;
-                    item.setTitle(getResources().getString(R.string.catalog));
-                    item.setIcon(R.drawable.ic_catalog);
-                } else {
-                    focus = ADAPTER_CATALOG;
-                    item.setTitle(getResources().getString(R.string.inventory));
-                    item.setIcon(R.drawable.ic_inventory);
-                }
-                viewModel.updatePlatinum();
-                break;
-            case R.id.nav_update:
-                creditCounter = 0;
-                Toast.makeText(this, "Updating Platinum", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.nav_source:
-                creditCounter = 0;
-                SourceDialog sourceDialog = new SourceDialog();
-                Bundle bundle = new Bundle();
-                bundle.putInt(EXTRA_SOURCE, sourceSelected);
-                sourceDialog.setArguments(bundle);
-                sourceDialog.show(getSupportFragmentManager(), Integer.toString(sourceSelected));
-                break;
-            case R.id.nav_save:
-                creditCounter = 0;
-                Toast.makeText(this, "Saving", Toast.LENGTH_SHORT).show();
-                if (!mInventory.isEmpty()) {
-                } else Toast.makeText(this, "No item in the Inventory", Toast.LENGTH_SHORT).show();
-                saveData();
-                break;
-            case R.id.nav_sort:
-                creditCounter = 0;
-                SortDialog sortDialog = new SortDialog();
-                Bundle bundle1 = new Bundle();
-                bundle1.putInt(EXTRA_SORT, sorting);
-                bundle1.putBoolean(EXTRA_NO_ZERO, no_zero);
-                bundle1.putBoolean(EXTRA_INVERSE, inverse_order);
-                sortDialog.setArguments(bundle1);
-                sortDialog.show(getSupportFragmentManager(), Integer.toString(sorting));
-                /*if(sorting==SORT_AZ){
-                    sorting = SORT_DUCPLAT;
-                    item.setTitle(getResources().getString(R.string.sort_az));
-                    item.setIcon(R.drawable.ic_sort_by_alpha);
-                }else {
-                    sorting = SORT_AZ;
-                    item.setTitle(getResources().getString(R.string.sort_duc_plat));
-                    item.setIcon(R.drawable.ic_sort_duc);
-                }
-                sort();*/
-                break;
-            case R.id.nav_credit:
-                creditCounter = 0;
-                CreditDialog creditDialog = new CreditDialog();
-                creditDialog.show(getSupportFragmentManager(), "Credits");
-                break;
-            case R.id.nav_quit:
-                creditCounter = 0;
-                Toast.makeText(this, "Closing App", Toast.LENGTH_SHORT).show();
-                if (!mInventory.isEmpty()) {
-                }
-                finish();
-            default:
-                creditCounter = 0;
-                break;
-        }
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     /**
