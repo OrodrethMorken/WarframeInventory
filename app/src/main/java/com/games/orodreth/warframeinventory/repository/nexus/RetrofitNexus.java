@@ -23,7 +23,6 @@ public class RetrofitNexus implements Runnable {
     private Retrofit retrofit;
     private ArrayList<Items> itemsArrayList;
     private Repository repository;
-    private String search = "%%";
     private Observer<List<Items>> observer;
     private LiveData<List<Items>> liveData;
 
@@ -55,11 +54,12 @@ public class RetrofitNexus implements Runnable {
                     repository.setLoadingProgress(items.indexOf(object));
                     if (object.getComponents() != null && !object.getCategory().equals("Misc")) {
                         String name = object.getName();
+                        String category = object.getCategory();
                         for (ObjectWfcd i :object.getComponents()) {
                             if(i.isTradable() && i.getType() == null) {
                                 String fullname = name + " " + i.getName();
                                 Items item = new Items(fullname, i.getImageName());
-                                item.setCategory(i.getCategory());
+                                item.setCategory(category);
                                 item.setTradable(i.isTradable());
                                 item.setDucat(i.getDucats());
                                 itemsArrayList.add(item);
@@ -96,7 +96,7 @@ public class RetrofitNexus implements Runnable {
                 Log.d(TAG, "onChanged: finished reading database");
             }
         };
-        liveData = repository.getCatalog(search);
+        liveData = repository.getCatalog();
 
         liveData.observeForever(observer);
     }

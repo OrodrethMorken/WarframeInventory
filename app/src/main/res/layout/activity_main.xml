@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".MainActivity"
     android:id="@+id/relativeLayout">
@@ -10,19 +11,46 @@
     <include layout="@layout/toolbar"
         android:id="@+id/toolbar_main"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/search_layout"
+        android:layout_below="@id/toolbar_main">
+        <SearchView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/searchView"
+            android:layout_weight="2"/>
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/spinnerCategory"
+            android:layout_weight="1"
+            android:layout_gravity="center"/>
+    </LinearLayout>
+
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="5dp"
-        android:layout_below="@+id/toolbar_main"
+        android:layout_below="@+id/search_layout"
         android:max="100" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/bottom_nav"
+        android:layout_alignParentBottom="true"
+        android:background="?android:attr/windowBackground"
+        app:menu="@menu/bottom_navigation"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/progressBar"
+        android:layout_above="@id/bottom_nav"
         android:background="@android:color/darker_gray">
     </androidx.recyclerview.widget.RecyclerView>
 

@@ -34,7 +34,7 @@ public class RetrofitWFM implements Runnable {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         repository = Repository.getInstance();
-        livedata = repository.getCatalog("%%");
+        livedata = repository.getCatalog();
         wfMaApi = retrofit.create(WfMaApi.class);
         buildDatabase();
     }

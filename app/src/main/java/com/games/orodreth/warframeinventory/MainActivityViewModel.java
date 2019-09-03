@@ -46,8 +46,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         repository.deleteAllItems();
     }
 
-    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String field, boolean direction) {
-        return repository.getCatalog(search, field, direction);
+    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String field, boolean direction, int focus) {
+        return repository.getCatalog(search, category, field, direction, focus);
     }
 
     public void insertInventory(Inventory inventory){
@@ -60,5 +60,9 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public void deleteInventory(Inventory inventory){
         repository.deleteInventory(inventory);
+    }
+
+    public List<String> getCategory(){
+        return repository.getCategory();
     }
 }

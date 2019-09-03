@@ -12,6 +12,8 @@ import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.List;
 
+import static com.games.orodreth.warframeinventory.MainActivity.ADAPTER_CATALOG;
+
 @Dao
 public abstract class ItemsDao {
 
@@ -26,9 +28,6 @@ public abstract class ItemsDao {
 
     @Query("DELETE FROM catalog_table")
     public abstract void deleteAll ();
-
-    @Query("SELECT * FROM catalog_table WHERE name LIKE :search ORDER BY name ASC ")
-    public abstract LiveData<List<Items>> getItems (String search);
 
     /*@Query("SELECT * FROM catalog_table WHERE name LIKE :search ORDER BY CASE WHEN :direction = 1 THEN :field END ASC, CASE WHEN :direction = 0 THEN :field END DESC")
     LiveData<List<ItemsAndInventory>> getItems (String search, String field, boolean direction);*/
@@ -54,14 +53,19 @@ public abstract class ItemsDao {
         return getItemsViaQuery(query);
     }
 
-    public LiveData<List<ItemsAndInventory>> getItems(String search, String category, String field, boolean direction){
-        String text = "SELECT * FROM catalog_table A LEFT JOIN inventory_table B ON A.id = B.item_id";
+    public LiveData<List<ItemsAndInventory>> getItems(String search, String category, String field, boolean direction, int focus){
+        String text = "SELECT * FROM catalog_table A ";
+        if(focus == ADAPTER_CATALOG){
+            text += "LEFT JOIN inventory_table B ON A.id = B.item_id";
+        }else {
+            text += "INNER JOIN inventory_table B ON A.id = B.item_id";
+        }
         boolean search_found = false;
         if(search!=null && !search.trim().isEmpty()){
-            text += " WHERE name LIKE \""+search+"\"";
+            text += " WHERE name LIKE \"%"+search+"%\"";
             search_found = true;
         }
-        if(category!= null && !category.trim().isEmpty()){
+        if(category!= null && !category.trim().isEmpty() && !category.equals("All")){
             if(search_found){
                 text += " AND category LIKE \""+category+"\"";
             }else {
@@ -72,7 +76,7 @@ public abstract class ItemsDao {
         if(direction){
             text += " ASC";
         }else {
-            text = " DESC";
+            text += " DESC";
         }
         SupportSQLiteQuery query = new SimpleSQLiteQuery(text);
         return getItemsViaQuery(query);

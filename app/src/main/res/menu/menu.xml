@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/searchbar"
-        android:title="@string/search"
-        android:icon="@drawable/ic_search"
-        app:showAsAction="ifRoom|collapseActionView"
-        app:actionViewClass="android.widget.SearchView" />
     <item android:id="@+id/source"
         android:title="@string/select_source"
         app:showAsAction="never">
@@ -22,6 +17,29 @@
         </menu>
     </item>
     <item android:id="@+id/sorting"
-        android:title="@string/sort_duc_plat"
-        app:showAsAction="never"/>
+        android:title="@string/sort"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/sort_az"
+                    android:title="@string/sort_a_z"
+                    android:checked="true"/>
+                <item
+                    android:id="@+id/sort_duc"
+                    android:title="@string/ducats"/>
+                <item
+                    android:id="@+id/sort_plat"
+                    android:title="@string/platinum"/>
+                <item
+                    android:id="@+id/sort_duc-plat"
+                    android:title="@string/duc_plat"/>
+            </group>
+            <item
+                android:id="@+id/sort_direction"
+                android:title="@string/sort_asc"
+                android:checkable="true"
+                android:checked="true"/>
+        </menu>
+    </item>
 </menu>

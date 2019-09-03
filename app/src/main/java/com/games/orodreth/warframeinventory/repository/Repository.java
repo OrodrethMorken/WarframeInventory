@@ -58,18 +58,17 @@ public class Repository {
         Database database = Database.getInstance(application);
         itemsDao = database.itemsDao();
         inventoryDao = database.inventoryDao();
+        if(getCount()==0){
+            getCatalogRetrofit();
+        }
     }
 
-    public LiveData<List<Items>> getCatalog(String search) {
-        return itemsDao.getItems(search);
+    public LiveData<List<Items>> getCatalog() {
+        return itemsDao.getItems();
     }
 
-    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String fields, boolean direction){
-        return itemsDao.getItems(search, fields, direction);
-    }
-
-    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String fields, boolean direction){
-        return itemsDao.getItems(search, category, fields, direction);
+    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String fields, boolean direction, int focus){
+        return itemsDao.getItems(search, category, fields, direction, focus);
     }
 
     public LiveData<List<Inventory>> getInventory(){
@@ -118,27 +117,8 @@ public class Repository {
         loadingMax.setValue(size);
     }
 
-    //Items Operation
-
-    public void insertItem (Items item){
-        new InsertItemAsync(itemsDao).execute(item);
-    }
-
-    public void updateItem (Items item){
-        new UpdateItemAsync(itemsDao).execute(item);
-    }
-
-    public void deleteItem (Items item){
-        new DeleteItemAsync(itemsDao).execute(item);
-    }
-
-    public void deleteAllItems(){
-        new DeleteAllItemAsync(itemsDao).execute();
-    }
-
     public void getCatalogRetrofit() {
 //        getCatalogWFM();
-        getCategory();
         getCatalogNexus();
     }
 
@@ -162,16 +142,16 @@ public class Repository {
         new RetrofitPlatinumNexus().start();
     }
 
-    public void getCategory(){
+    public List<String> getCategory(){
         AsyncTask<Void, Void, List<String>> async = new GetCategoryAsync(itemsDao).execute();
         try {
-            List<String> category = async.get();
-            Toast.makeText(application, "category", Toast.LENGTH_SHORT).show();
+            return async.get();
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     private class GetCategoryAsync extends AsyncTask<Void, Void, List<String>>{
@@ -186,6 +166,24 @@ public class Repository {
         protected List<String> doInBackground(Void... voids) {
             return itemsDao.getCategory();
         }
+    }
+
+    //Items Operation
+
+    public void insertItem (Items item){
+        new InsertItemAsync(itemsDao).execute(item);
+    }
+
+    public void updateItem (Items item){
+        new UpdateItemAsync(itemsDao).execute(item);
+    }
+
+    public void deleteItem (Items item){
+        new DeleteItemAsync(itemsDao).execute(item);
+    }
+
+    public void deleteAllItems(){
+        new DeleteAllItemAsync(itemsDao).execute();
     }
 
     private static class InsertItemAsync extends AsyncTask<Items, Void, Void>{

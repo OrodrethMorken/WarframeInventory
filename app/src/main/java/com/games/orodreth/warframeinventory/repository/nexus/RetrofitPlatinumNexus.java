@@ -34,7 +34,7 @@ public class RetrofitPlatinumNexus extends Thread {
                 .baseUrl("https://raw.githubusercontent.com/WFCD/warframe-items/development/data/json/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        liveData = repository.getCatalog("%%");
+        liveData = repository.getCatalog();
         observerLoad = new Observer<List<Items>>() {
             @Override
             public void onChanged(List<Items> items) {

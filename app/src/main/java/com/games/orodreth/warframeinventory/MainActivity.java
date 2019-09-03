@@ -13,36 +13,47 @@ import com.games.orodreth.warframeinventory.repository.Repository;
 import com.games.orodreth.warframeinventory.repository.database.Inventory;
 import com.games.orodreth.warframeinventory.repository.database.Items;
 import com.games.orodreth.warframeinventory.repository.database.ItemsAndInventory;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.annotation.Nullable;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import static com.games.orodreth.warframeinventory.Adapter.ADD_ONE;
 import static com.games.orodreth.warframeinventory.Adapter.REMOVE_ALL;
@@ -61,27 +72,26 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     public static final String EXTRA_INVERSE = "com.games.orodreth.warframeinventory.inverse";
     public static final String SHARED = "com.games.orodreth.warframeinventory.shared";
     public static final int STORAGE_VALUE = 17;
-    public static final int SORT_AZ = 0;
-    public static final int SORT_DUCPLAT = 1;
-    public static final int SORT_DUC = 2;
-    public static final int SORT_PLAT = 3;
-    private static final int ADAPTER_CATALOG = 0;
+    public static final int ADAPTER_CATALOG = 0;
     private static final int ADAPTER_STORAGE = 1;
     public static final int INVERTED = -1;
     private RecyclerView mRecyclerView;
     private Adapter mAdapter;
+    private ArrayList<String> category;
+    private Observer<List<ItemsAndInventory>> observer;
+    private LiveData<List<ItemsAndInventory>> livedata;
     private ArrayList<Items> mItems;
     private ArrayList<Items> filteredList;
     private ArrayList<Inventory> mInventory;
     private RequestQueue mRequestQueue;
+    private Spinner spinner;
     private ProgressBar mProgressBar;
     private Handler mHandler = new Handler();
     private int focus; //determine if it's visible the catalog or the storage
-    private int sorting;
+    private String sorting;
     private SearchView mSearch;
     private boolean searchToggle;
-    private boolean no_zero;
-    private boolean inverse_order;
+    private boolean order;
     private int sourceSelected;
 
     private MainActivityViewModel viewModel;
@@ -102,10 +112,40 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
 
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                switch (menuItem.getItemId()){
+                    case R.id.nav_inventory:
+                        if(menuItem.getTitle().equals(getResources().getString(R.string.catalog))){
+                            menuItem.setTitle(R.string.inventory);
+                            menuItem.setIcon(R.drawable.ic_inventory);
+                            focus=ADAPTER_CATALOG;
+                            updateRecycleView();
+                        }else {
+                            menuItem.setTitle(R.string.catalog);
+                            menuItem.setIcon(R.drawable.ic_catalog);
+                            focus=ADAPTER_STORAGE;
+                            updateRecycleView();
+                        }
+                        break;
+                    case R.id.nav_search:
+                        break;
+                    case R.id.nav_settings:
+                        viewModel.updatePlatinum();
+                        break;
+                }
+                return true;
+            }
+        });
+
         mProgressBar = findViewById(R.id.progressBar);
         mRecyclerView = findViewById(R.id.recycler_view);
 
-        mSearch = findViewById(R.id.searchbar);
+        mSearch = findViewById(R.id.searchView);
+        mSearch.setSubmitButtonEnabled(true);
+        spinner= findViewById(R.id.spinnerCategory);
 
         loadData();
 
@@ -114,15 +154,26 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         mRecyclerView.setAdapter(mAdapter);
 
         viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
-        viewModel.getCatalog("", Repository.fields[0], true).observe(this, new Observer<List<ItemsAndInventory>>() {
+
+        observer = new Observer<List<ItemsAndInventory>>() {
             @Override
             public void onChanged(List<ItemsAndInventory> items) {
                 mAdapter.setItemList(items);
                 mAdapter.notifyDataSetChanged();
             }
-        });
+        };
 
-        /*mSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        category = new ArrayList<>();
+        category.add("All");
+        category.addAll(viewModel.getCategory());
+        while (category.remove(null)){};
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, category);
+        spinner.setAdapter(arrayAdapter);
+
+        updateRecycleView();
+
+        mSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 return false;
@@ -130,17 +181,22 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                String search = "%"+newText+"%";
-                viewModel.getCatalog(search, Repository.fields[0], true).observe(MainActivity.this, new Observer<List<ItemsAndInventory>>() {
-                    @Override
-                    public void onChanged(List<ItemsAndInventory> items) {
-                        mAdapter.setItemList(items);
-                        mAdapter.notifyDataSetChanged();
-                    }
-                });
+                updateRecycleView();
                 return true;
             }
-        });*/
+        });
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                updateRecycleView();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         viewModel.getLoadingProgress().observe(this, new Observer<Integer>() {
             @Override
@@ -156,10 +212,19 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
             }
         });
         focus = ADAPTER_CATALOG;
-        sorting = SORT_AZ;
+        sorting = Repository.fields[0];
+        order = true;
 
         mRequestQueue = Volley.newRequestQueue(this);
-        viewModel.getCatalogRetrofit();
+//        viewModel.getCatalogRetrofit();
+    }
+
+    private void updateRecycleView(){
+        if(livedata!=null) {
+            livedata.removeObservers(this);
+        }
+        livedata = viewModel.getCatalog(mSearch.getQuery().toString(), category.get(spinner.getSelectedItemPosition()), sorting, order, focus);
+        livedata.observe(this, observer);
     }
 
 
@@ -212,28 +277,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
 
-        mSearch = (SearchView) menu.findItem(R.id.searchbar).getActionView();
-        mSearch.setSubmitButtonEnabled(true);
-
-        mSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                String search = "%"+newText+"%";
-                viewModel.getCatalog(search, Repository.fields[0], true).observe(MainActivity.this, new Observer<List<ItemsAndInventory>>() {
-                    @Override
-                    public void onChanged(List<ItemsAndInventory> items) {
-                        mAdapter.setItemList(items);
-                        mAdapter.notifyDataSetChanged();
-                    }
-                });
-                return true;
-            }
-        });
 
         return true;
     }
@@ -248,23 +291,36 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case R.id.search_bar:
-                if(searchToggle){
-                    searchToggle = false;
-                    //mSearch.setText("");
-                    mSearch.setVisibility(View.GONE);
+            case R.id.sort_az:
+                sorting = Repository.fields[0];
+                item.setChecked(true);
+                updateRecycleView();
+                return true;
+            case R.id.sort_duc:
+                sorting = Repository.fields[1];
+                item.setChecked(true);
+                updateRecycleView();
+                return true;
+            case R.id.sort_duc_plat:
+                sorting = Repository.fields[2];
+                item.setChecked(true);
+                updateRecycleView();
+                return true;
+            case R.id.sort_plat:
+                sorting = Repository.fields[3];
+                item.setChecked(true);
+                updateRecycleView();
+                return true;
+            case R.id.sort_direction:
+                if(item.isChecked()){
+                    item.setTitle(R.string.sort_desc);
+                    order = false;
                 }else {
-                    searchToggle = true;
-                    mSearch.setVisibility(View.VISIBLE);
-                }return true;
-            case R.id.sorting:
-                if(sorting==SORT_AZ){
-                    sorting = SORT_DUCPLAT;
-                    item.setTitle(getResources().getString(R.string.sort_az));
-                }else {
-                    sorting = SORT_AZ;
-                    item.setTitle(getResources().getString(R.string.sort_duc_plat));
+                    item.setTitle(R.string.sort_asc);
+                    order = true;
                 }
+                item.setChecked(order);
+                updateRecycleView();
                 return true;
             case R.id.nexus:
                 sourceSelected = 0;
@@ -366,7 +422,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(EXTRA_SORT, sorting);
+        outState.putString(EXTRA_SORT, sorting);
         outState.putInt(EXTRA_SOURCE, sourceSelected);
         outState.putInt(EXTRA_STORAGE, focus);
     }
@@ -394,7 +450,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        sorting = savedInstanceState.getInt(EXTRA_SORT);
+        sorting = savedInstanceState.getString(EXTRA_SORT);
         sourceSelected = savedInstanceState.getInt(EXTRA_SOURCE);
         focus = savedInstanceState.getInt(EXTRA_STORAGE);
     }

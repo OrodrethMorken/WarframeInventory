@@ -40,7 +40,7 @@ public class RetrofitPlatinumWFM extends Thread {
                 .build();
         
         repository = Repository.getInstance();
-        livedata = repository.getCatalog("%%");
+        livedata = repository.getCatalog();
         wfMaApi = retrofit.create(WfMaApi.class);
         observerPrice = new Observer<List<Items>>() {
             @Override

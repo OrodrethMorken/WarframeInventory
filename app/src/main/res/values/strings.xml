@@ -13,9 +13,7 @@
     <string name="update_platinum_prices">Update Platinum Prices</string>
     <string name="update_all">Update All</string>
     <string name="update">Update</string>
-    <string name="sort_duc_plat">Sort Duc/Plat</string>
     <string name="sort">Sort by</string>
-    <string name="sort_az">Sort AZ</string>
     <string name="catalog">Catalog</string>
     <string name="duc_plat">Duc/Plat:</string>
     <string name="quantity">Quantity:</string>
@@ -38,4 +36,7 @@
     <string name="credits">Credits</string>
     <string name="no_zero">Exclude value of Zero</string>
     <string name="reverse_the_order">Reverse the order</string>
+    <string name="sort_a_z">A-Z:</string>
+    <string name="sort_asc">ASC</string>
+    <string name="sort_desc">DESC</string>
 </resources>
