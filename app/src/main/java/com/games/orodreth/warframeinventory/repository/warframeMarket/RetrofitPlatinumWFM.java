@@ -80,7 +80,12 @@ public class RetrofitPlatinumWFM extends Thread {
                     List<PlatinumWFM.Payload.StatClose.Orders> orders = platinumWFM.getPayload().getStatistics_closed().getOrders();
                     if (orders.isEmpty()) return;
                     mItems.get(finalI).setPlat(orders.get(orders.size() - 1).getMin_price());
-                    mItems.get(finalI).setPlatAvg((int) orders.get(orders.size() - 1).getMedian());
+                    mItems.get(finalI).setPlatAvg(orders.get(orders.size() - 1).getMedian());
+                    if(orders.get(orders.size() - 1).getMedian()!=0) {
+                        mItems.get(finalI).setDucPlat((double) mItems.get(finalI).getDucat() / orders.get(orders.size() - 1).getMedian());
+                    }else {
+                        mItems.get(finalI).setDucPlat(mItems.get(finalI).getDucat());
+                    }
                     repository.updateItem(mItems.get(finalI));
                     if(finalI==mItems.size()-1){
                         repository.setLoadingProgress(0);

@@ -18,6 +18,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -41,6 +42,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.Spinner;
@@ -90,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     private int focus; //determine if it's visible the catalog or the storage
     private String sorting;
     private SearchView mSearch;
+    private ConstraintLayout searchLayout;
     private boolean searchToggle;
     private boolean order;
     private int sourceSelected;
@@ -109,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = findViewById(R.id.toolbar_main);
+        final Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
@@ -131,7 +134,12 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                         }
                         break;
                     case R.id.nav_search:
-                        break;
+                        if(searchLayout.getVisibility()==View.GONE) {
+                            searchLayout.setVisibility(View.VISIBLE);
+                        }else{
+                            searchLayout.setVisibility(View.GONE);
+                        }
+                        return false;
                     case R.id.nav_settings:
                         viewModel.updatePlatinum();
                         break;
@@ -146,6 +154,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         mSearch = findViewById(R.id.searchView);
         mSearch.setSubmitButtonEnabled(true);
         spinner= findViewById(R.id.spinnerCategory);
+
+        searchLayout = findViewById(R.id.search_layout);
+        searchLayout.setVisibility(View.GONE);
 
         loadData();
 
@@ -166,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         category = new ArrayList<>();
         category.add("All");
         category.addAll(viewModel.getCategory());
-        while (category.remove(null)){};
+        while (category.remove(null)){}
 
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, category);
         spinner.setAdapter(arrayAdapter);
@@ -216,7 +227,6 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         order = true;
 
         mRequestQueue = Volley.newRequestQueue(this);
-//        viewModel.getCatalogRetrofit();
     }
 
     private void updateRecycleView(){
@@ -273,10 +283,22 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
      */
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(final Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
 
+        viewModel.getSource().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean source) {
+                if(source){
+                    MenuItem wfm = menu.findItem(R.id.market);
+                    wfm.setChecked(true);
+                }else {
+                    MenuItem nexus = menu.findItem(R.id.nexus);
+                    nexus.setChecked(true);
+                }
+            }
+        });
 
         return true;
     }
@@ -323,11 +345,11 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 updateRecycleView();
                 return true;
             case R.id.nexus:
-                sourceSelected = 0;
+                viewModel.setSource(false);
                 item.setChecked(true);
                 return true;
             case R.id.market:
-                sourceSelected = 1;
+                viewModel.setSource(true);
                 item.setChecked(true);
                 return true;
             default: return super.onOptionsItemSelected(item);

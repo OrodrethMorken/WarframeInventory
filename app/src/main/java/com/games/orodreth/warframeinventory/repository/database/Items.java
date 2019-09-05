@@ -15,7 +15,7 @@ public class Items{
     private String imageUrl;
     private int ducat;
     private int plat;
-    private int platAvg;
+    private double platAvg;
     private double ducPlat;
 
     private String urlWFM;
@@ -81,12 +81,13 @@ public class Items{
         this.plat = plat;
     }
 
-    public int getPlatAvg() {
+    public double getPlatAvg() {
         return platAvg;
     }
 
-    public void setPlatAvg(int platAvg) {
+    public void setPlatAvg(double platAvg) {
         this.platAvg = platAvg;
+        //setDucPlat(platAvg/ducat);
     }
 
     public double getDucPlat() {

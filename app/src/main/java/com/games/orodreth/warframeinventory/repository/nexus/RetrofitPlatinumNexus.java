@@ -91,6 +91,11 @@ public class RetrofitPlatinumNexus extends Thread {
                             if (object.getName().equals(item.getName())) {
                                 item.setPlat(object.getPrices().getSelling().getCurrent().getMin());
                                 item.setPlatAvg(object.getPrices().getSelling().getCurrent().getMedian());
+                                if(object.getPrices().getSelling().getCurrent().getMedian()!=0) {
+                                    item.setDucPlat((double) item.getDucat() / object.getPrices().getSelling().getCurrent().getMedian());
+                                }else {
+                                    item.setDucPlat(item.getDucat());
+                                }
                                 repository.updateItem(item);
                                 break;
                             }

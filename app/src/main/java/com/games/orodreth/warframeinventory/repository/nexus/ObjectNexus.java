@@ -42,13 +42,13 @@ public class ObjectNexus {
 
             public class Current{
                 private int min;
-                private int median;
+                private double median;
 
                 public int getMin() {
                     return min;
                 }
 
-                public int getMedian() {
+                public double getMedian() {
                     return median;
                 }
             }

@@ -9,7 +9,6 @@ import androidx.lifecycle.LiveData;
 
 import com.games.orodreth.warframeinventory.repository.Repository;
 import com.games.orodreth.warframeinventory.repository.database.Inventory;
-import com.games.orodreth.warframeinventory.repository.database.Items;
 import com.games.orodreth.warframeinventory.repository.database.ItemsAndInventory;
 
 import java.util.List;
@@ -36,6 +35,14 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public LiveData<Integer> getLoadingMax(){
         return repository.getLoadingMax();
+    }
+
+    public LiveData<Boolean> getSource(){
+        return repository.getSource();
+    }
+
+    public void setSource(boolean source){
+        repository.setSource(source);
     }
 
     public void updatePlatinum(){

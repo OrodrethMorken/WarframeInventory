@@ -30,13 +30,13 @@ public class PlatinumWFM {
 
             public class Orders {
                 private int min_price;
-                private float median;
+                private double median;
 
                 public int getMin_price() {
                     return min_price;
                 }
 
-                public float getMedian() {
+                public double getMedian() {
                     return median;
                 }
             }

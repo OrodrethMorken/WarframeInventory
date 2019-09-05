@@ -2,8 +2,6 @@ package com.games.orodreth.warframeinventory.repository;
 
 import android.app.Application;
 import android.os.AsyncTask;
-import android.util.Log;
-import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -17,7 +15,6 @@ import com.games.orodreth.warframeinventory.repository.database.ItemsDao;
 import com.games.orodreth.warframeinventory.repository.nexus.RetrofitNexus;
 import com.games.orodreth.warframeinventory.repository.nexus.RetrofitPlatinumNexus;
 import com.games.orodreth.warframeinventory.repository.warframeMarket.RetrofitPlatinumWFM;
-import com.games.orodreth.warframeinventory.repository.warframeMarket.RetrofitWFM;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -31,34 +28,36 @@ public class Repository {
 
     private MutableLiveData<Integer> loadingProgress;
     private MutableLiveData<Integer> loadingMax;
-    private LiveData<List<Inventory>> inventory;
+    private MutableLiveData<Boolean> source;
 
-    public static String fields[] = {"name", "ducat", "ducPlat", "plat", "platAvg"};
+    public static String[] fields = {"name", "ducat", "ducPlat", "plat", "platAvg"};
 
-    public static synchronized Repository getInstance(){
-        if(instance == null){
+    public static synchronized Repository getInstance() {
+        if (instance == null) {
             instance = new Repository();
         }
         return instance;
     }
 
-    private Repository (){
+    private Repository() {
         loadingProgress = new MutableLiveData<>();
         loadingProgress.setValue(0);
         loadingMax = new MutableLiveData<>();
         loadingMax.setValue(0);
+        source = new MutableLiveData<>();
+        source.setValue(false);
     }
 
-    public boolean hasApplication(){
-        return application!=null;
+    public boolean hasApplication() {
+        return application != null;
     }
 
-    public void setApplication (Application application){
+    public void setApplication(Application application) {
         this.application = application;
         Database database = Database.getInstance(application);
         itemsDao = database.itemsDao();
         inventoryDao = database.inventoryDao();
-        if(getCount()==0){
+        if (getCount() == 0) {
             getCatalogRetrofit();
         }
     }
@@ -67,15 +66,15 @@ public class Repository {
         return itemsDao.getItems();
     }
 
-    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String fields, boolean direction, int focus){
+    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String fields, boolean direction, int focus) {
         return itemsDao.getItems(search, category, fields, direction, focus);
     }
 
-    public LiveData<List<Inventory>> getInventory(){
+    public LiveData<List<Inventory>> getInventory() {
         return inventoryDao.getInventory();
     }
 
-    public int getCount(){
+    public int getCount() {
         AsyncTask<String, Void, Integer> async = new GetCountAsync(itemsDao).execute("");
         try {
             return async.get();
@@ -87,11 +86,11 @@ public class Repository {
         return 0;
     }
 
-    private class GetCountAsync extends AsyncTask<String, Void, Integer>{
+    private static class GetCountAsync extends AsyncTask<String, Void, Integer> {
 
         private ItemsDao itemsDao;
 
-        public GetCountAsync(ItemsDao itemsDao){
+        public GetCountAsync(ItemsDao itemsDao) {
             this.itemsDao = itemsDao;
         }
 
@@ -101,48 +100,55 @@ public class Repository {
         }
     }
 
-    public LiveData<Integer> getLoadingProgress(){
+    public LiveData<Integer> getLoadingProgress() {
         return loadingProgress;
     }
 
-    public LiveData<Integer> getLoadingMax(){
+    public LiveData<Integer> getLoadingMax() {
         return loadingMax;
     }
 
-    public void setLoadingProgress (int progress) {
+    public LiveData<Boolean> getSource() {
+        return source;
+    }
+
+    public void setSource(boolean source) {
+        this.source.setValue(source);
+    }
+
+    public void setLoadingProgress(int progress) {
         loadingProgress.setValue(progress);
     }
 
-    public void setLoadingSize (int size) {
+    public void setLoadingSize(int size) {
         loadingMax.setValue(size);
     }
 
     public void getCatalogRetrofit() {
-//        getCatalogWFM();
         getCatalogNexus();
     }
 
-    public void getCatalogNexus(){
+    public void getCatalogNexus() {
         new Thread(new RetrofitNexus()).start();
     }
 
-    public void getCatalogWFM(){
-        new Thread(new RetrofitWFM()).start();
-    }
-
     public void updatePlatinum() {
-        platinumWFM();
+        if (source.getValue()) {
+            platinumWFM();
+        } else {
+            platinumNexus();
+        }
     }
 
-    public void platinumWFM(){
+    public void platinumWFM() {
         new RetrofitPlatinumWFM().start();
     }
 
-    public void platinumNexus(){
+    public void platinumNexus() {
         new RetrofitPlatinumNexus().start();
     }
 
-    public List<String> getCategory(){
+    public List<String> getCategory() {
         AsyncTask<Void, Void, List<String>> async = new GetCategoryAsync(itemsDao).execute();
         try {
             return async.get();
@@ -154,11 +160,11 @@ public class Repository {
         return null;
     }
 
-    private class GetCategoryAsync extends AsyncTask<Void, Void, List<String>>{
+    private static class GetCategoryAsync extends AsyncTask<Void, Void, List<String>> {
 
         private ItemsDao itemsDao;
 
-        public GetCategoryAsync(ItemsDao itemsDao){
+        public GetCategoryAsync(ItemsDao itemsDao) {
             this.itemsDao = itemsDao;
         }
 
@@ -170,27 +176,27 @@ public class Repository {
 
     //Items Operation
 
-    public void insertItem (Items item){
+    public void insertItem(Items item) {
         new InsertItemAsync(itemsDao).execute(item);
     }
 
-    public void updateItem (Items item){
+    public void updateItem(Items item) {
         new UpdateItemAsync(itemsDao).execute(item);
     }
 
-    public void deleteItem (Items item){
+    public void deleteItem(Items item) {
         new DeleteItemAsync(itemsDao).execute(item);
     }
 
-    public void deleteAllItems(){
+    public void deleteAllItems() {
         new DeleteAllItemAsync(itemsDao).execute();
     }
 
-    private static class InsertItemAsync extends AsyncTask<Items, Void, Void>{
+    private static class InsertItemAsync extends AsyncTask<Items, Void, Void> {
 
         private ItemsDao itemsDao;
 
-        public InsertItemAsync(ItemsDao itemsDao){
+        public InsertItemAsync(ItemsDao itemsDao) {
             this.itemsDao = itemsDao;
         }
 
@@ -201,11 +207,11 @@ public class Repository {
         }
     }
 
-    private static class UpdateItemAsync extends AsyncTask<Items, Void, Void>{
+    private static class UpdateItemAsync extends AsyncTask<Items, Void, Void> {
 
         private ItemsDao itemsDao;
 
-        public UpdateItemAsync(ItemsDao itemsDao){
+        public UpdateItemAsync(ItemsDao itemsDao) {
             this.itemsDao = itemsDao;
         }
 
@@ -216,11 +222,11 @@ public class Repository {
         }
     }
 
-    private static class DeleteItemAsync extends AsyncTask<Items, Void, Void>{
+    private static class DeleteItemAsync extends AsyncTask<Items, Void, Void> {
 
         private ItemsDao itemsDao;
 
-        public DeleteItemAsync(ItemsDao itemsDao){
+        public DeleteItemAsync(ItemsDao itemsDao) {
             this.itemsDao = itemsDao;
         }
 
@@ -231,11 +237,11 @@ public class Repository {
         }
     }
 
-    private static class DeleteAllItemAsync extends AsyncTask<Items, Void, Void>{
+    private static class DeleteAllItemAsync extends AsyncTask<Items, Void, Void> {
 
         private ItemsDao itemsDao;
 
-        public DeleteAllItemAsync(ItemsDao itemsDao){
+        public DeleteAllItemAsync(ItemsDao itemsDao) {
             this.itemsDao = itemsDao;
         }
 
@@ -248,15 +254,15 @@ public class Repository {
 
     //Inventory Operation
 
-    public void insertInventory (Inventory inventory){
+    public void insertInventory(Inventory inventory) {
         new InsertInventoryAsync(inventoryDao).execute(inventory);
     }
 
-    public void updateInventory (Inventory inventory){
+    public void updateInventory(Inventory inventory) {
         new UpdateInventoryAsync(inventoryDao).execute(inventory);
     }
 
-    public void deleteInventory (Inventory inventory){
+    public void deleteInventory(Inventory inventory) {
         new DeleteInventoryAsync(inventoryDao).execute(inventory);
     }
 
@@ -264,11 +270,11 @@ public class Repository {
         new DeleteAllInventoryAsync(inventoryDao).execute();
     }
 
-    private static class InsertInventoryAsync extends AsyncTask<Inventory, Void, Void>{
+    private static class InsertInventoryAsync extends AsyncTask<Inventory, Void, Void> {
 
         private InventoryDao inventoryDao;
 
-        public InsertInventoryAsync(InventoryDao inventoryDao){
+        public InsertInventoryAsync(InventoryDao inventoryDao) {
             this.inventoryDao = inventoryDao;
         }
 
@@ -279,11 +285,11 @@ public class Repository {
         }
     }
 
-    private static class UpdateInventoryAsync extends AsyncTask<Inventory, Void, Void>{
+    private static class UpdateInventoryAsync extends AsyncTask<Inventory, Void, Void> {
 
         private InventoryDao inventoryDao;
 
-        public UpdateInventoryAsync(InventoryDao inventoryDao){
+        public UpdateInventoryAsync(InventoryDao inventoryDao) {
             this.inventoryDao = inventoryDao;
         }
 
@@ -294,11 +300,11 @@ public class Repository {
         }
     }
 
-    private static class DeleteInventoryAsync extends AsyncTask<Inventory, Void, Void>{
+    private static class DeleteInventoryAsync extends AsyncTask<Inventory, Void, Void> {
 
         private InventoryDao inventoryDao;
 
-        public DeleteInventoryAsync(InventoryDao inventoryDao){
+        public DeleteInventoryAsync(InventoryDao inventoryDao) {
             this.inventoryDao = inventoryDao;
         }
 
@@ -309,11 +315,11 @@ public class Repository {
         }
     }
 
-    private static class DeleteAllInventoryAsync extends AsyncTask<Void, Void, Void>{
+    private static class DeleteAllInventoryAsync extends AsyncTask<Void, Void, Void> {
 
         private InventoryDao inventoryDao;
 
-        public DeleteAllInventoryAsync(InventoryDao inventoryDao){
+        public DeleteAllInventoryAsync(InventoryDao inventoryDao) {
             this.inventoryDao = inventoryDao;
         }
 
