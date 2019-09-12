@@ -11,6 +11,7 @@ import com.games.orodreth.warframeinventory.repository.database.Items;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -32,6 +33,7 @@ public class RetrofitPlatinumNexus extends Thread {
         repository = Repository.getInstance();
         retrofit = new Retrofit.Builder()
                 .baseUrl("https://raw.githubusercontent.com/WFCD/warframe-items/development/data/json/")
+                .callbackExecutor(Executors.newSingleThreadExecutor())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         liveData = repository.getCatalog();
@@ -39,6 +41,7 @@ public class RetrofitPlatinumNexus extends Thread {
             @Override
             public void onChanged(List<Items> items) {
                 loadItems(items);
+                liveData.removeObserver(observerLoad);
             }
         };
         handler.post(new Runnable() {
@@ -47,12 +50,16 @@ public class RetrofitPlatinumNexus extends Thread {
                 liveData.observeForever(observerLoad);
             }
         });
-        updatePrice();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                updatePrice();
+            }
+        }).start();
     }
 
-    private void loadItems(List<Items> items){
+    private void loadItems(List<Items> items) {
         itemsArrayList = (ArrayList<Items>) items;
-        liveData.removeObserver(observerLoad);
     }
 
     private void updatePrice() {
@@ -66,21 +73,34 @@ public class RetrofitPlatinumNexus extends Thread {
                     return;
                 }
 
-                List<ObjectNexus> prices = response.body();
-                for (ObjectNexus object : prices) {
+                final List<ObjectNexus> prices = response.body();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        repository.setLoadingSize(prices.size());
+                    }
+                });
+                for (final ObjectNexus object : prices) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            repository.setLoadingProgress(prices.indexOf(object));
+
+                        }
+                    });
                     if (object.getComponents() != null) {
                         String name = object.getName();
                         for (ObjectNexus component : object.getComponents()) {
                             for (Items item : itemsArrayList) {
-                                String fullname = name + " " +component.getName();
+                                String fullname = name + " " + component.getName();
                                 if (fullname.equals(item.getName())) {
                                     try {
                                         item.setPlat(component.getPrices().getSelling().getCurrent().getMin());
                                         item.setPlatAvg(component.getPrices().getSelling().getCurrent().getMedian());
-                                        Log.d(TAG, "onResponse: id " + item.getId());
+//                                        Log.d(TAG, "onResponse: id " + item.getId());
                                         repository.updateItem(item);
-                                    }catch (NullPointerException e){
-                                        Log.e(TAG, "NullPointer: "+fullname, e);
+                                    } catch (NullPointerException e) {
+                                        Log.e(TAG, "NullPointer: " + fullname, e);
                                     }
                                     break;
                                 }
@@ -91,9 +111,9 @@ public class RetrofitPlatinumNexus extends Thread {
                             if (object.getName().equals(item.getName())) {
                                 item.setPlat(object.getPrices().getSelling().getCurrent().getMin());
                                 item.setPlatAvg(object.getPrices().getSelling().getCurrent().getMedian());
-                                if(object.getPrices().getSelling().getCurrent().getMedian()!=0) {
+                                if (object.getPrices().getSelling().getCurrent().getMedian() != 0) {
                                     item.setDucPlat((double) item.getDucat() / object.getPrices().getSelling().getCurrent().getMedian());
-                                }else {
+                                } else {
                                     item.setDucPlat(item.getDucat());
                                 }
                                 repository.updateItem(item);
@@ -102,7 +122,12 @@ public class RetrofitPlatinumNexus extends Thread {
                         }
                     }
                 }
-                repository.setLoadingProgress(0);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        repository.setLoadingProgress(0);
+                    }
+                });
                 Log.d(TAG, "onResponse: finished updating price");
             }
 

@@ -12,7 +12,7 @@
         android:title="@string/search" />
 
     <item
-        android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_menu_manage"
-        android:title="settings" />
+        android:id="@+id/nav_update"
+        android:icon="@drawable/ic_refresh_button"
+        android:title="@string/update"/>
 </menu>

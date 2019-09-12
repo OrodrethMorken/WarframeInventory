@@ -29,7 +29,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
     private int imageSource;
 
     public interface OnItemClickListener{
-        void onItemClick(int position);
+        void onItemClick(int id);
     }
 
     public void setOnItemListener(OnItemClickListener listener){
@@ -120,7 +120,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ItemViewHolder> {
                     if(mListener != null){
                         int position = getAdapterPosition();
                         if(position!=RecyclerView.NO_POSITION){
-                            mListener.onItemClick(position);
+                            mListener.onItemClick(mItems.get(position).items.getId());
                         }
                     }
                 }

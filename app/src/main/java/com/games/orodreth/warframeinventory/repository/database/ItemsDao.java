@@ -10,6 +10,8 @@ import androidx.room.Update;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
+import com.games.orodreth.warframeinventory.repository.Repository;
+
 import java.util.List;
 
 import static com.games.orodreth.warframeinventory.MainActivity.ADAPTER_CATALOG;
@@ -29,31 +31,13 @@ public abstract class ItemsDao {
     @Query("DELETE FROM catalog_table")
     public abstract void deleteAll ();
 
-    /*@Query("SELECT * FROM catalog_table WHERE name LIKE :search ORDER BY CASE WHEN :direction = 1 THEN :field END ASC, CASE WHEN :direction = 0 THEN :field END DESC")
-    LiveData<List<ItemsAndInventory>> getItems (String search, String field, boolean direction);*/
-
-    /*@Query("SELECT * FROM catalog_table A LEFT JOIN inventory_table B ON A.id = B.item_id WHERE A.name LIKE :search ORDER BY CASE WHEN :direction = 1 THEN :field END ASC, CASE WHEN :direction = 0 THEN :field END DESC")
-    public abstract LiveData<List<ItemsAndInventory>> getItems (String search, String field, boolean direction);*/
+    @Query("SELECT * FROM catalog_table A LEFT JOIN inventory_table B ON A.id = B.item_id WHERE A.id = :id")
+    public abstract LiveData<List<ItemsAndInventory>> getItems(int id);
 
     @RawQuery(observedEntities = ItemsAndInventory.class)
     abstract LiveData<List<ItemsAndInventory>> getItemsViaQuery (SupportSQLiteQuery query);
 
-    public LiveData<List<ItemsAndInventory>> getItems(String search, String field, boolean direction ){
-        String text = "SELECT * FROM catalog_table A LEFT JOIN inventory_table B ON A.id = B.item_id";
-        if(search!=null && !search.trim().isEmpty()){
-            text += " WHERE name LIKE \""+search+"\"";
-        }
-        text += " ORDER BY "+field;
-        if(direction){
-            text += " ASC";
-        }else {
-            text = " DESC";
-        }
-        SupportSQLiteQuery query = new SimpleSQLiteQuery(text);
-        return getItemsViaQuery(query);
-    }
-
-    public LiveData<List<ItemsAndInventory>> getItems(String search, String category, String field, boolean direction, int focus){
+    public LiveData<List<ItemsAndInventory>> getItems(String search, String category, String field, boolean direction, int focus, boolean removeZero){
         String text = "SELECT * FROM catalog_table A ";
         if(focus == ADAPTER_CATALOG){
             text += "LEFT JOIN inventory_table B ON A.id = B.item_id";
@@ -61,6 +45,7 @@ public abstract class ItemsDao {
             text += "INNER JOIN inventory_table B ON A.id = B.item_id";
         }
         boolean search_found = false;
+        boolean category_found = false;
         if(search!=null && !search.trim().isEmpty()){
             text += " WHERE name LIKE \"%"+search+"%\"";
             search_found = true;
@@ -70,6 +55,15 @@ public abstract class ItemsDao {
                 text += " AND category LIKE \""+category+"\"";
             }else {
                 text += " WHERE category LIKE \""+category+"\"";
+                category_found = true;
+            }
+        }
+        if(removeZero && field != Repository.fields[0]){
+            if(search_found || category_found){
+                text += " AND "+ field+ " > 0";
+            }
+            else {
+                text += " WHERE "+ field + " > 0";
             }
         }
         text += " ORDER BY "+field;

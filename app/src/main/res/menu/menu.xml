@@ -32,7 +32,7 @@
                     android:id="@+id/sort_plat"
                     android:title="@string/platinum"/>
                 <item
-                    android:id="@+id/sort_duc-plat"
+                    android:id="@+id/sort_duc_plat"
                     android:title="@string/duc_plat"/>
             </group>
             <item
@@ -40,6 +40,10 @@
                 android:title="@string/sort_asc"
                 android:checkable="true"
                 android:checked="true"/>
+            <item
+                android:id="@+id/sort_zero"
+                android:title="@string/no_zero"
+                android:checkable="true"/>
         </menu>
     </item>
 </menu>

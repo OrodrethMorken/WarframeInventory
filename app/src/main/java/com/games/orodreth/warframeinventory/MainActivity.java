@@ -2,6 +2,7 @@ package com.games.orodreth.warframeinventory;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -23,6 +24,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 
 import androidx.lifecycle.LiveData;
@@ -62,16 +64,7 @@ import static com.games.orodreth.warframeinventory.Adapter.REMOVE_ALL;
 import static com.games.orodreth.warframeinventory.Adapter.REMOVE_ONE;
 
 public class MainActivity extends AppCompatActivity implements Adapter.OnItemClickListener {
-    public static final String EXTRA_URL = "com.games.orodreth.warframeinventory.image_url";
-    public static final String EXTRA_NAME = "com.games.orodreth.warframeinventory.item_name";
-    public static final String EXTRA_DUCATS = "com.games.orodreth.warframeinventory.ducats";
-    public static final String EXTRA_PLATINUM = "com.games.orodreth.warframeinventory.platinum";
-    public static final String EXTRA_STORAGE = "com.games.orodreth.warframeinventory.storage";
-    public static final String EXTRA_DUC_PLAT = "com.games.orodreth.warframeinventory.duc_plat";
-    public static final String EXTRA_SOURCE = "com.games.orodreth.warframeinventory.source";
-    public static final String EXTRA_SORT = "com.games.orodreth.warframeinventory.sort";
-    public static final String EXTRA_NO_ZERO = "com.games.orodreth.warframeinventory.no_zero";
-    public static final String EXTRA_INVERSE = "com.games.orodreth.warframeinventory.inverse";
+    public static final String EXTRA_ID = "com.games.orodreth.warframeinventory.item_id";
     public static final String SHARED = "com.games.orodreth.warframeinventory.shared";
     public static final int STORAGE_VALUE = 17;
     public static final int ADAPTER_CATALOG = 0;
@@ -95,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     private ConstraintLayout searchLayout;
     private boolean searchToggle;
     private boolean order;
+    private boolean removeZero;
     private int sourceSelected;
 
     private MainActivityViewModel viewModel;
@@ -119,32 +113,33 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                switch (menuItem.getItemId()){
+                switch (menuItem.getItemId()) {
                     case R.id.nav_inventory:
-                        if(menuItem.getTitle().equals(getResources().getString(R.string.catalog))){
+                        if (menuItem.getTitle().equals(getResources().getString(R.string.catalog))) {
                             menuItem.setTitle(R.string.inventory);
                             menuItem.setIcon(R.drawable.ic_inventory);
-                            focus=ADAPTER_CATALOG;
+                            focus = ADAPTER_CATALOG;
                             updateRecycleView();
-                        }else {
+                        } else {
                             menuItem.setTitle(R.string.catalog);
                             menuItem.setIcon(R.drawable.ic_catalog);
-                            focus=ADAPTER_STORAGE;
+                            focus = ADAPTER_STORAGE;
                             updateRecycleView();
                         }
-                        break;
+                        return true;
                     case R.id.nav_search:
-                        if(searchLayout.getVisibility()==View.GONE) {
+                        if (searchLayout.getVisibility() == View.GONE) {
                             searchLayout.setVisibility(View.VISIBLE);
-                        }else{
+                        } else {
                             searchLayout.setVisibility(View.GONE);
                         }
                         return false;
-                    case R.id.nav_settings:
+                    case R.id.nav_update:
                         viewModel.updatePlatinum();
-                        break;
+                        return false;
+                    default:
+                        return false;
                 }
-                return true;
             }
         });
 
@@ -153,16 +148,15 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
         mSearch = findViewById(R.id.searchView);
         mSearch.setSubmitButtonEnabled(true);
-        spinner= findViewById(R.id.spinnerCategory);
+        spinner = findViewById(R.id.spinnerCategory);
 
         searchLayout = findViewById(R.id.search_layout);
         searchLayout.setVisibility(View.GONE);
 
-        loadData();
-
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new Adapter(this, new ArrayList<ItemsAndInventory>());
         mRecyclerView.setAdapter(mAdapter);
+        mAdapter.setOnItemListener(this);
 
         viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
@@ -177,7 +171,8 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         category = new ArrayList<>();
         category.add("All");
         category.addAll(viewModel.getCategory());
-        while (category.remove(null)){}
+        while (category.remove(null)) {
+        }
 
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, category);
         spinner.setAdapter(arrayAdapter);
@@ -229,11 +224,11 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         mRequestQueue = Volley.newRequestQueue(this);
     }
 
-    private void updateRecycleView(){
-        if(livedata!=null) {
+    private void updateRecycleView() {
+        if (livedata != null) {
             livedata.removeObservers(this);
         }
-        livedata = viewModel.getCatalog(mSearch.getQuery().toString(), category.get(spinner.getSelectedItemPosition()), sorting, order, focus);
+        livedata = viewModel.getCatalog(mSearch.getQuery().toString(), category.get(spinner.getSelectedItemPosition()), sorting, order, focus, removeZero);
         livedata.observe(this, observer);
     }
 
@@ -241,38 +236,14 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     /**
      * Function called when clicking on an item
      *
-     * @param position is the position on the index
+     * @param id is the position on the index
      */
 
     @Override
-    public void onItemClick(int position) {
-        /*Intent itemIntent = new Intent(this, ItemActivity.class);
-        Items selectedItem;
-        if (mSearch.getText().toString().isEmpty() && focus == ADAPTER_CATALOG) { //check if there is a filter applied
-            selectedItem = mItems.get(position);
-        } else selectedItem = filteredList.get(position);
-        int j = -1;
-        if (!mInventory.isEmpty()) {
-            for (int i = 0; i < mInventory.size(); i++) {
-                String name = mInventory.get(i).getName();
-                if (name.equals(selectedItem.getItem())) {
-                    j = i;
-                }
-            }
-        }
-        itemIntent.putExtra(EXTRA_SOURCE, sourceSelected);
-        itemIntent.putExtra(EXTRA_URL, selectedItem.getImageUrl());
-        itemIntent.putExtra(EXTRA_NAME, selectedItem.getItem());
-        itemIntent.putExtra(EXTRA_DUCATS, selectedItem.getDucats());
-        itemIntent.putExtra(EXTRA_PLATINUM, selectedItem.getPlat());
-        itemIntent.putExtra(EXTRA_DUC_PLAT, selectedItem.getDucPlat());
-        if (j < 0) {
-            itemIntent.putExtra(EXTRA_STORAGE, 0);
-        } else {
-            itemIntent.putExtra(EXTRA_STORAGE, mInventory.get(j).getQuantity());
-        }
-        //startActivity(itemIntent);
-        startActivityForResult(itemIntent, STORAGE_VALUE); //require intent+int REQUEST_CODE*/
+    public void onItemClick(int id) {
+        Intent itemIntent = new Intent(this, ItemActivity.class);
+        itemIntent.putExtra(EXTRA_ID, id);
+        startActivity(itemIntent); //require intent+int REQUEST_CODE*/
     }
 
     /**
@@ -290,10 +261,10 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
         viewModel.getSource().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean source) {
-                if(source){
+                if (source) {
                     MenuItem wfm = menu.findItem(R.id.market);
                     wfm.setChecked(true);
-                }else {
+                } else {
                     MenuItem nexus = menu.findItem(R.id.nexus);
                     nexus.setChecked(true);
                 }
@@ -312,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.sort_az:
                 sorting = Repository.fields[0];
                 item.setChecked(true);
@@ -334,25 +305,33 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 updateRecycleView();
                 return true;
             case R.id.sort_direction:
-                if(item.isChecked()){
+                if (item.isChecked()) {
                     item.setTitle(R.string.sort_desc);
                     order = false;
-                }else {
+                } else {
                     item.setTitle(R.string.sort_asc);
                     order = true;
                 }
                 item.setChecked(order);
                 updateRecycleView();
                 return true;
+            case R.id.sort_zero:
+                removeZero = !item.isChecked();
+                item.setChecked(removeZero);
+                updateRecycleView();
+                return true;
             case R.id.nexus:
                 viewModel.setSource(false);
                 item.setChecked(true);
+                viewModel.updatePlatinum();
                 return true;
             case R.id.market:
                 viewModel.setSource(true);
                 item.setChecked(true);
+                viewModel.updatePlatinum();
                 return true;
-            default: return super.onOptionsItemSelected(item);
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -366,21 +345,21 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case ADD_ONE:
-                if(item.getOrder()==0){
+                if (item.getOrder() == 0) {
                     viewModel.insertInventory(new Inventory(item.getGroupId(), 1));
-                }else {
-                    viewModel.updateInventory(new Inventory(item.getGroupId(), item.getOrder()+1));
+                } else {
+                    viewModel.updateInventory(new Inventory(item.getGroupId(), item.getOrder() + 1));
                 }
                 return true;
             case REMOVE_ONE:
-                if(item.getOrder()>1){
-                    viewModel.updateInventory(new Inventory(item.getGroupId(), item.getOrder()-1));
-                }else if(item.getOrder()==1){
+                if (item.getOrder() > 1) {
+                    viewModel.updateInventory(new Inventory(item.getGroupId(), item.getOrder() - 1));
+                } else if (item.getOrder() == 1) {
                     viewModel.deleteInventory(new Inventory(item.getGroupId(), item.getOrder()));
                 }
                 return true;
             case REMOVE_ALL:
-                if(item.getOrder()>0){
+                if (item.getOrder() > 0) {
                     viewModel.deleteInventory(new Inventory(item.getGroupId(), item.getOrder()));
                 }
                 return true;
@@ -403,77 +382,5 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnItemCli
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
         }
-    }
-
-    /*@Override
-    public void selectSource(int source) {
-        if (source == 0) {
-            sourceSelected = 0;
-            parseJSON2();
-        } else if (source == 1) {
-            sourceSelected = 1;
-            parseJSON();
-        }
-        saveData();
-        sorting = SORT_AZ;
-    }*/
-
-
-    private boolean hasConnection() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null &&
-                activeNetwork.isConnected();
-    }
-
-    private void loadData() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED, MODE_PRIVATE);
-        sourceSelected = sharedPreferences.getInt(EXTRA_SOURCE, 0);
-    }
-
-    private void saveData() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear();
-        editor.putInt(EXTRA_SOURCE, sourceSelected);
-        editor.apply();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString(EXTRA_SORT, sorting);
-        outState.putInt(EXTRA_SOURCE, sourceSelected);
-        outState.putInt(EXTRA_STORAGE, focus);
-    }
-
-    /**
-     * This method is called after {@link #onStart} when the activity is
-     * being re-initialized from a previously saved state, given here in
-     * <var>savedInstanceState</var>.  Most implementations will simply use {@link #onCreate}
-     * to restore their state, but it is sometimes convenient to do it here
-     * after all of the initialization has been done or to allow subclasses to
-     * decide whether to use your default implementation.  The default
-     * implementation of this method performs a restore of any view state that
-     * had previously been frozen by {@link #onSaveInstanceState}.
-     *
-     * <p>This method is called between {@link #onStart} and
-     * {@link #onPostCreate}.
-     *
-     * @param savedInstanceState the data most recently supplied in {@link #onSaveInstanceState}.
-     * @see #onCreate
-     * @see #onPostCreate
-     * @see #onResume
-     * @see #onSaveInstanceState
-     */
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-
-        sorting = savedInstanceState.getString(EXTRA_SORT);
-        sourceSelected = savedInstanceState.getInt(EXTRA_SOURCE);
-        focus = savedInstanceState.getInt(EXTRA_STORAGE);
     }
 }

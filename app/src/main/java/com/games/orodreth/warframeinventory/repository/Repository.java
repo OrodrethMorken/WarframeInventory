@@ -66,8 +66,12 @@ public class Repository {
         return itemsDao.getItems();
     }
 
-    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String fields, boolean direction, int focus) {
-        return itemsDao.getItems(search, category, fields, direction, focus);
+    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String fields, boolean direction, int focus, boolean removeZero) {
+        return itemsDao.getItems(search, category, fields, direction, focus, removeZero);
+    }
+
+    public LiveData<List<ItemsAndInventory>> getCatalog(int id){
+        return itemsDao.getItems(id);
     }
 
     public LiveData<List<Inventory>> getInventory() {
@@ -75,7 +79,7 @@ public class Repository {
     }
 
     public int getCount() {
-        AsyncTask<String, Void, Integer> async = new GetCountAsync(itemsDao).execute("");
+        AsyncTask<Void, Void, Integer> async = new GetCountAsync(itemsDao).execute();
         try {
             return async.get();
         } catch (ExecutionException e) {
@@ -86,7 +90,7 @@ public class Repository {
         return 0;
     }
 
-    private static class GetCountAsync extends AsyncTask<String, Void, Integer> {
+    private static class GetCountAsync extends AsyncTask<Void, Void, Integer> {
 
         private ItemsDao itemsDao;
 
@@ -95,7 +99,7 @@ public class Repository {
         }
 
         @Override
-        protected Integer doInBackground(String... strings) {
+        protected Integer doInBackground(Void... voids) {
             return itemsDao.getCount();
         }
     }

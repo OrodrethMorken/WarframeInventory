@@ -13,11 +13,11 @@ import com.games.orodreth.warframeinventory.repository.database.ItemsAndInventor
 
 import java.util.List;
 
-public class MainActivityViewModel extends AndroidViewModel {
+public class ItemActivityViewModel extends AndroidViewModel {
 
     private Repository repository;
 
-    public MainActivityViewModel(@NonNull Application application) {
+    public ItemActivityViewModel(@NonNull Application application) {
         super(application);
         repository = Repository.getInstance();
         if(!repository.hasApplication()){
@@ -25,32 +25,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         }
     }
 
-    public LiveData<Integer> getLoadingProgress(){
-        return repository.getLoadingProgress();
-    }
-
-    public LiveData<Integer> getLoadingMax(){
-        return repository.getLoadingMax();
-    }
-
-    public LiveData<Boolean> getSource(){
-        return repository.getSource();
-    }
-
-    public void setSource(boolean source){
-        repository.setSource(source);
-    }
-
-    public void updatePlatinum(){
-        repository.updatePlatinum();
-    }
-
-    public void deleteAll(){
-        repository.deleteAllItems();
-    }
-
-    public LiveData<List<ItemsAndInventory>> getCatalog(String search, String category, String field, boolean direction, int focus, boolean removeZero) {
-        return repository.getCatalog(search, category, field, direction, focus, removeZero);
+    public LiveData<List<ItemsAndInventory>> getCatalog(int id){
+        return repository.getCatalog(id);
     }
 
     public void insertInventory(Inventory inventory){
@@ -63,9 +39,5 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public void deleteInventory(Inventory inventory){
         repository.deleteInventory(inventory);
-    }
-
-    public List<String> getCategory(){
-        return repository.getCategory();
     }
 }

@@ -1,7 +1,10 @@
 package com.games.orodreth.warframeinventory.repository.warframeMarket;
 
+import android.app.Application;
+import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
@@ -13,6 +16,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,6 +40,7 @@ public class RetrofitPlatinumWFM extends Thread {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.warframe.market/v1/")
+                .callbackExecutor(Executors.newSingleThreadExecutor())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         
@@ -76,7 +81,12 @@ public class RetrofitPlatinumWFM extends Thread {
                         return;
                     }
                     PlatinumWFM platinumWFM = response.body();
-                    repository.setLoadingProgress(finalI);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            repository.setLoadingProgress(finalI);
+                        }
+                    });
                     List<PlatinumWFM.Payload.StatClose.Orders> orders = platinumWFM.getPayload().getStatistics_closed().getOrders();
                     if (orders.isEmpty()) return;
                     mItems.get(finalI).setPlat(orders.get(orders.size() - 1).getMin_price());
@@ -88,7 +98,12 @@ public class RetrofitPlatinumWFM extends Thread {
                     }
                     repository.updateItem(mItems.get(finalI));
                     if(finalI==mItems.size()-1){
-                        repository.setLoadingProgress(0);
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                repository.setLoadingProgress(0);
+                            }
+                        });
                         Log.d(TAG, "onResponse plat: end");
                     }
                 }
